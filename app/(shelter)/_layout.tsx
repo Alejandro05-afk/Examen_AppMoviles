@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router'
+import { Stack, Redirect } from 'expo-router'
 import { useAuthStore } from '../../src/presentation/store/authStore'
 import { Button } from 'tamagui'
 import { useRouter } from 'expo-router'
@@ -6,7 +6,14 @@ import { supabase } from '../../src/data/supabase/client'
 
 export default function ShelterLayout() {
   const router = useRouter()
-  const { logout } = useAuthStore()
+  const { isAuthenticated, user, logout } = useAuthStore()
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />
+  }
+  if (user?.role !== 'shelter') {
+    return <Redirect href="/(adopter)/home" />
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -26,6 +33,7 @@ export default function ShelterLayout() {
       }}
     >
       <Stack.Screen name="dashboard" options={{ title: 'Mi Refugio' }} />
+      <Stack.Screen name="requests" options={{ title: 'Solicitudes' }} />
       <Stack.Screen name="pets/index" options={{ title: 'Mis Mascotas' }} />
       <Stack.Screen name="pets/create" options={{ title: 'Nueva Mascota' }} />
       <Stack.Screen name="pets/[id]/edit" options={{ title: 'Editar Mascota' }} />

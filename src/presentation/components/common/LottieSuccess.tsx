@@ -6,7 +6,7 @@ interface Props { message: string; onFinish?: () => void }
 export const LottieSuccess = ({ message, onFinish }: Props) => (
   <YStack flex={1} alignItems="center" justifyContent="center">
     <LottieView
-      source={require('../../../assets/lottie/success.json')}
+      source={require('../../../../assets/lottie/success.json')}
       autoPlay loop={false}
       onAnimationFinish={onFinish}
       style={{ width: 180, height: 180 }}

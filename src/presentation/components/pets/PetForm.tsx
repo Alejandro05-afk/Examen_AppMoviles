@@ -56,6 +56,8 @@ export const PetForm = ({ initialData, onSubmit, submitLabel = 'Guardar', loadin
     setInternalLoading(true)
     try {
       await onSubmit(form, photoUri ?? undefined)
+    } catch (e: any) {
+      Alert.alert('Error', e.message ?? 'No se pudo guardar la mascota')
     } finally {
       setInternalLoading(false)
     }

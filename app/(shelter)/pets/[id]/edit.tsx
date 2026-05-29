@@ -43,10 +43,10 @@ export default function EditPetScreen() {
       size: form.size,
       gender: form.gender,
       description: form.description,
-      age_years: parseInt(form.ageYears),
-      is_vaccinated: form.isVaccinated,
-      is_sterilized: form.isSterilized,
-      is_dewormed: form.isDewormed,
+      ageYears: parseInt(form.ageYears),
+      isVaccinated: form.isVaccinated,
+      isSterilized: form.isSterilized,
+      isDewormed: form.isDewormed,
       status: form.status,
     }, photoUri)
     Alert.alert('Actualizado', 'Mascota actualizada correctamente')

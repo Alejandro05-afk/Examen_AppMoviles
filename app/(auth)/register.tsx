@@ -19,9 +19,7 @@ export default function RegisterScreen() {
     setLoading(true)
     try {
       await register(email, password, fullName, role)
-      Alert.alert('Cuenta creada', 'Revisa tu email para confirmar tu cuenta', [
-        { text: 'OK', onPress: () => router.replace('/(auth)/login') }
-      ])
+      // El layout redirigirá automáticamente según el rol
     } catch (e: any) {
       Alert.alert('Error', e.message)
     } finally {

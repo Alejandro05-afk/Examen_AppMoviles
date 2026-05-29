@@ -6,11 +6,11 @@ import LottieView from 'lottie-react-native'
 import { usePets } from '../../../src/presentation/hooks/usePets'
 import { useAuthStore } from '../../../src/presentation/store/authStore'
 import { PetCard } from '../../../src/presentation/components/pets/PetCard'
-import { supabase } from '../../../src/data/supabase/client'
+import { getOrCreateShelterForUser } from '../../../src/data/supabase/shelterHelpers'
 
 export default function ShelterPetsScreen() {
   const router = useRouter()
-  const { user } = useAuthStore()
+  const { user, shelterId, setShelterId } = useAuthStore()
   const { shelterPets, fetchShelterPets, deletePet } = usePets()
   const [loading, setLoading] = useState(true)
 
@@ -20,15 +20,15 @@ export default function ShelterPetsScreen() {
 
   const loadPets = async () => {
     if (!user) return
-    const { data: shelter } = await supabase
-      .from('shelters')
-      .select('id')
-      .eq('profile_id', user.id)
-      .single()
-    if (shelter) {
-      await fetchShelterPets(shelter.id)
+    try {
+      const currentShelterId = shelterId ?? await getOrCreateShelterForUser(user)
+      setShelterId(currentShelterId)
+      await fetchShelterPets(currentShelterId)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleDelete = (petId: string, petName: string) => {

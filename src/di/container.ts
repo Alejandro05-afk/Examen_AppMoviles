@@ -23,7 +23,7 @@ import { GetNearbySheltersUseCase } from '../domain/usecases/shelters/GetNearbyS
 const authRepo = new SupabaseAuthRepository()
 const petRepo = new SupabasePetRepository()
 const adoptionRepo = new SupabaseAdoptionRepository()
-const shelterRepo = new SupabaseShelterRepository()
+export const shelterRepo = new SupabaseShelterRepository()
 const geminiDS = new GeminiDataSource()
 
 export const loginUseCase = new LoginUseCase(authRepo)

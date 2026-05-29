@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { Alert } from 'react-native'
 import { YStack, Text, Input, Button, Spinner } from 'tamagui'
-import { Link, useRouter } from 'expo-router'
+import { Link } from 'expo-router'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
 
 export default function LoginScreen() {
-  const router = useRouter()
   const { login, loginWithGoogle } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,10 +23,13 @@ export default function LoginScreen() {
   }
 
   const handleGoogleLogin = async () => {
+    setLoading(true)
     try {
       await loginWithGoogle()
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Inicio de sesión cancelado')
+      Alert.alert('Error', e.message)
+    } finally {
+      setLoading(false)
     }
   }
 

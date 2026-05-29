@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { FlatList, RefreshControl } from 'react-native'
-import { YStack, XStack, Text, Button, Card, Image, Input } from 'tamagui'
+import { Image } from 'expo-image'
+import { YStack, XStack, Text, Button, Card, Input } from 'tamagui'
 import { useRouter, Link } from 'expo-router'
 import LottieView from 'lottie-react-native'
 import { usePets } from '../../src/presentation/hooks/usePets'
+
+const PLACEHOLDER_IMAGE = 'https://placehold.co/400x300/e2e8f0/a1a1aa?text=Pet'
 
 export default function HomeScreen() {
   const router = useRouter()
@@ -34,10 +37,10 @@ export default function HomeScreen() {
         <Input flex={1} placeholder="Buscar mascotas..." value={search}
           onChangeText={setSearch} />
         <Link href="/(adopter)/map" asChild>
-          <Button background="$primary">📍</Button>
+          <Button background="$primary">Mapa</Button>
         </Link>
         <Link href="/(adopter)/ai-chat" asChild>
-          <Button background="$primary">🤖</Button>
+          <Button background="$primary">IA</Button>
         </Link>
       </XStack>
 
@@ -47,10 +50,11 @@ export default function HomeScreen() {
         numColumns={2}
         contentContainerStyle={{ padding: 12, gap: 12 }}
         columnWrapperStyle={{ gap: 12 }}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => fetchAvailablePets()} />}
         ListEmptyComponent={
           <YStack alignItems="center" justifyContent="center" mt={60} gap="$4">
             <LottieView source={require('../../assets/lottie/empty-pets.json')} autoPlay loop style={{ width: 180, height: 180 }} />
-            <Text color="$color">No hay mascotas disponibles aún</Text>
+            <Text color="$color">No hay mascotas disponibles aun</Text>
           </YStack>
         }
         renderItem={({ item }) => (
@@ -58,7 +62,9 @@ export default function HomeScreen() {
             onPress={() => router.push(`/(adopter)/pet/${item.id}` as any)}
             pressStyle={{ opacity: 0.8 }}>
             <Image
-              source={{ uri: item.mainPhotoUrl || 'https://placehold.co/200x200/e2e8f0/a1a1aa?text=🐾' }}
+              source={item.mainPhotoUrl || PLACEHOLDER_IMAGE}
+              contentFit="cover"
+              transition={150}
               style={{ width: '100%', height: 150 }}
             />
             <YStack padding="$2" gap="$1">
@@ -68,7 +74,7 @@ export default function HomeScreen() {
                   {item.species}
                 </Text>
                 {item.breed && (
-                  <Text fontSize={11} color="$color">· {item.breed}</Text>
+                  <Text fontSize={11} color="$color">- {item.breed}</Text>
                 )}
               </XStack>
             </YStack>
@@ -77,10 +83,10 @@ export default function HomeScreen() {
       />
 
       <XStack justifyContent="space-around" padding="$3" borderTopWidth={1} borderTopColor="$borderColor">
-        <Link href="/(adopter)/home" asChild><Button flex={1} background="$primary" size="$3">🏠</Button></Link>
-        <Link href="/(adopter)/my-requests" asChild><Button flex={1} variant="outlined" size="$3">📋</Button></Link>
-        <Link href="/(adopter)/ai-chat" asChild><Button flex={1} variant="outlined" size="$3">🤖</Button></Link>
-        <Link href="/(adopter)/map" asChild><Button flex={1} variant="outlined" size="$3">📍</Button></Link>
+        <Link href="/(adopter)/home" asChild><Button flex={1} background="$primary" size="$3">Inicio</Button></Link>
+        <Link href="/(adopter)/my-requests" asChild><Button flex={1} variant="outlined" size="$3">Solicitudes</Button></Link>
+        <Link href="/(adopter)/ai-chat" asChild><Button flex={1} variant="outlined" size="$3">IA</Button></Link>
+        <Link href="/(adopter)/map" asChild><Button flex={1} variant="outlined" size="$3">Mapa</Button></Link>
       </XStack>
     </YStack>
   )
