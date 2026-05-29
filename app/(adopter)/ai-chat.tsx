@@ -1,11 +1,10 @@
 import { useState, useRef } from 'react'
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 import Markdown from 'react-native-markdown-display'
 import LottieView from 'lottie-react-native'
 import { sendAIMessageUseCase } from '../../src/di/container'
-import { useColorScheme } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import { colors, borderRadius } from '../../src/presentation/theme'
+import { colors } from '../../src/presentation/theme'
 
 interface Message { id: string; role: 'user' | 'assistant'; text: string }
 
