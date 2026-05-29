@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native'
-import { YStack, XStack, Text, Button, Input, TextArea, Card } from 'tamagui'
+import { ScrollView, Alert, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity, Text, View, ActivityIndicator } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useAuthStore } from '../../src/presentation/store/authStore'
 import { createAdoptionRequestUseCase } from '../../src/di/container'
+import { colors, borderRadius, shadows } from '../../src/presentation/theme'
+import { StatusBar } from 'expo-status-bar'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function AdoptFormScreen() {
   const { petId, shelterId, petName } = useLocalSearchParams<{ petId: string; shelterId: string; petName: string }>()
@@ -30,122 +32,248 @@ export default function AdoptFormScreen() {
     setSubmitting(true)
     try {
       const message = [
-        `🎯 Motivo: ${form.reason}`,
-        form.experience ? `🐾 Experiencia: ${form.experience}` : null,
-        form.otherPets ? `🐕 Otras mascotas: ${form.otherPets}` : null,
-        form.housingType ? `🏠 Vivienda: ${form.housingType}` : null,
-        form.hasYard ? `🌳 Espacio exterior: ${form.hasYard}` : null,
-        form.additionalInfo ? `📝 Comentarios: ${form.additionalInfo}` : null,
-      ]
-        .filter(Boolean)
-        .join('\n')
-
-      await createAdoptionRequestUseCase.execute(petId, user!.id, shelterId, message)
-      Alert.alert('Solicitud enviada', 'El refugio revisará tu solicitud y te responderá pronto.')
+        `Motivación: ${form.reason}`,
+        form.experience && `Experiencia: ${form.experience}`,
+        form.otherPets && `Otras mascotas: ${form.otherPets}`,
+        form.housingType && `Vivienda: ${form.housingType}`,
+        `¿Tiene patio? ${form.hasYard === 'yes' ? 'Sí' : 'No'}`,
+        form.additionalInfo && `Adicional: ${form.additionalInfo}`,
+      ].filter(Boolean).join('\n')
+      await createAdoptionRequestUseCase.execute(petId!, user!.id, shelterId!, message)
+      Alert.alert('Solicitud enviada', 'Tu solicitud de adopción ha sido enviada al refugio.')
       router.back()
-    } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'No se pudo enviar la solicitud')
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'No se pudo enviar la solicitud')
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <Card padding="$4" borderRadius={12} backgroundColor="$primary">
-          <Text color="white" fontSize={18} fontWeight="bold">Solicitar adopción</Text>
-          <Text color="white" opacity={0.9} fontSize={14} mt="$1">
-            {petName ? `Mascota: ${petName}` : ''}
-          </Text>
-        </Card>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <StatusBar style="dark" />
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.content}>
+          <View style={styles.headerSection}>
+            <Feather name="edit" size={32} color={colors.primary} />
+            <Text style={styles.title}>Solicitud de Adopción</Text>
+            <Text style={styles.subtitle}>Estás solicitando adoptar a {petName}</Text>
+          </View>
 
-        <YStack gap="$2">
-          <Text fontWeight="600">¿Por qué quieres adoptar? *</Text>
-          <TextArea
-            placeholder="Cuéntanos tus motivos..."
-            value={form.reason}
-            onChangeText={update('reason')}
-            minHeight={80}
-          />
-        </YStack>
+          <View style={styles.field}>
+            <Text style={styles.label}>¿Por qué quieres adoptar? *</Text>
+            <View style={styles.inputContainer}>
+              <Feather name="heart" size={16} color={colors.textLight} style={styles.inputIcon} />
+              <TextInput
+                style={styles.textArea}
+                placeholder="Explica tu motivación..."
+                value={form.reason}
+                onChangeText={update('reason')}
+                multiline
+                numberOfLines={4}
+                placeholderTextColor={colors.textLight}
+              />
+            </View>
+          </View>
 
-        <YStack gap="$2">
-          <Text fontWeight="600">¿Tienes experiencia previa con mascotas?</Text>
-          <TextArea
-            placeholder="Si has tenido mascotas antes, cuéntanos..."
-            value={form.experience}
-            onChangeText={update('experience')}
-            minHeight={60}
-          />
-        </YStack>
+          <View style={styles.field}>
+            <Text style={styles.label}>Experiencia con mascotas</Text>
+            <View style={styles.inputContainer}>
+              <Feather name="award" size={16} color={colors.textLight} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Describe tu experiencia..."
+                value={form.experience}
+                onChangeText={update('experience')}
+                placeholderTextColor={colors.textLight}
+              />
+            </View>
+          </View>
 
-        <YStack gap="$2">
-          <Text fontWeight="600">¿Tienes otras mascotas en casa?</Text>
-          <TextArea
-            placeholder="Indica si tienes otras mascotas y cuáles son..."
-            value={form.otherPets}
-            onChangeText={update('otherPets')}
-            minHeight={60}
-          />
-        </YStack>
+          <View style={styles.field}>
+            <Text style={styles.label}>¿Tienes otras mascotas?</Text>
+            <View style={styles.inputContainer}>
+              <Feather name="users" size={16} color={colors.textLight} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Describe tus otras mascotas..."
+                value={form.otherPets}
+                onChangeText={update('otherPets')}
+                placeholderTextColor={colors.textLight}
+              />
+            </View>
+          </View>
 
-        <YStack gap="$2">
-          <Text fontWeight="600">Tipo de vivienda</Text>
-          <XStack gap="$2" flexWrap="wrap">
-            {['Casa', 'Departamento', 'Otro'].map(option => (
-              <Button
-                key={option}
-                size="$3"
-                flex={1}
-                backgroundColor={form.housingType === option ? '$primary' : '$backgroundHover'}
-                color={form.housingType === option ? 'white' : '$color'}
-                onPress={() => update('housingType')(form.housingType === option ? '' : option)}
+          <View style={styles.field}>
+            <Text style={styles.label}>Tipo de vivienda</Text>
+            <View style={styles.inputContainer}>
+              <Feather name="home" size={16} color={colors.textLight} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Apartamento, casa, etc."
+                value={form.housingType}
+                onChangeText={update('housingType')}
+                placeholderTextColor={colors.textLight}
+              />
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>¿Tienes patio/jardín?</Text>
+            <View style={styles.radioGroup}>
+              <TouchableOpacity
+                style={[styles.radio, form.hasYard === 'yes' && styles.radioActive]}
+                onPress={() => update('hasYard')('yes')}
               >
-                {option}
-              </Button>
-            ))}
-          </XStack>
-        </YStack>
-
-        <YStack gap="$2">
-          <Text fontWeight="600">¿Tienes patio o espacio exterior?</Text>
-          <XStack gap="$2">
-            {['Sí', 'No'].map(option => (
-              <Button
-                key={option}
-                size="$3"
-                flex={1}
-                backgroundColor={form.hasYard === option ? '$primary' : '$backgroundHover'}
-                color={form.hasYard === option ? 'white' : '$color'}
-                onPress={() => update('hasYard')(form.hasYard === option ? '' : option)}
+                <Feather name="check" size={16} color={form.hasYard === 'yes' ? 'white' : colors.text} />
+                <Text style={[styles.radioText, form.hasYard === 'yes' && styles.radioTextActive]}>  Sí</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.radio, form.hasYard === 'no' && styles.radioActive]}
+                onPress={() => update('hasYard')('no')}
               >
-                {option}
-              </Button>
-            ))}
-          </XStack>
-        </YStack>
+                <Feather name="x" size={16} color={form.hasYard === 'no' ? 'white' : colors.text} />
+                <Text style={[styles.radioText, form.hasYard === 'no' && styles.radioTextActive]}>  No</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        <YStack gap="$2">
-          <Text fontWeight="600">Información adicional</Text>
-          <TextArea
-            placeholder="Cualquier otra información que quieras compartir..."
-            value={form.additionalInfo}
-            onChangeText={update('additionalInfo')}
-            minHeight={60}
-          />
-        </YStack>
+          <View style={styles.field}>
+            <Text style={styles.label}>Información adicional</Text>
+            <View style={styles.inputContainer}>
+              <Feather name="file-text" size={16} color={colors.textLight} style={styles.inputIcon} />
+              <TextInput
+                style={styles.textArea}
+                placeholder="Cualquier otra información relevante..."
+                value={form.additionalInfo}
+                onChangeText={update('additionalInfo')}
+                multiline
+                numberOfLines={3}
+                placeholderTextColor={colors.textLight}
+              />
+            </View>
+          </View>
 
-        <Button
-          onPress={handleSubmit}
-          disabled={submitting}
-          backgroundColor="$primary"
-          size="$5"
-          icon={submitting ? undefined : undefined}
-        >
-          {submitting ? 'Enviando...' : 'Enviar solicitud'}
-        </Button>
+          <TouchableOpacity
+            style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <><Feather name="send" size={18} color="white" /><Text style={styles.submitButtonText}>  Enviar Solicitud</Text></>
+            )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    gap: 20,
+  },
+  headerSection: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textLight,
+    textAlign: 'center',
+  },
+  field: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+  },
+  inputIcon: {
+    marginTop: 10,
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: colors.text,
+  },
+  textArea: {
+    flex: 1,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: colors.text,
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  radio: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  radioActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  radioText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  radioTextActive: {
+    color: colors.white,
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    ...shadows.button,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+})

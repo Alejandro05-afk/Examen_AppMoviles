@@ -16,4 +16,10 @@ export interface Pet {
   mainPhotoUrl?: string
   createdAt: string
   updatedAt?: string
+  shelters?: {
+    name: string
+    latitude?: number
+    longitude?: number
+  }
 }
+

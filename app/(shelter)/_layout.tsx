@@ -1,8 +1,10 @@
 import { Stack, Redirect } from 'expo-router'
 import { useAuthStore } from '../../src/presentation/store/authStore'
-import { Button } from 'tamagui'
+import { TouchableOpacity, Text, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../src/data/supabase/client'
+import { colors, borderRadius } from '../../src/presentation/theme'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function ShelterLayout() {
   const router = useRouter()
@@ -24,15 +26,15 @@ export default function ShelterLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: '$background' },
+        headerStyle: { backgroundColor: '#FFFFFF' },
         headerRight: () => (
-          <Button size="$3" onPress={handleLogout} backgroundColor="$red8" mr="$2">
-            Salir
-          </Button>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Feather name="log-out" size={16} color="white" />
+          </TouchableOpacity>
         ),
       }}
     >
-      <Stack.Screen name="dashboard" options={{ title: 'Mi Refugio' }} />
+      <Stack.Screen name="dashboard" options={{ headerShown: false }} />
       <Stack.Screen name="requests" options={{ title: 'Solicitudes' }} />
       <Stack.Screen name="pets/index" options={{ title: 'Mis Mascotas' }} />
       <Stack.Screen name="pets/create" options={{ title: 'Nueva Mascota' }} />
@@ -42,3 +44,13 @@ export default function ShelterLayout() {
     </Stack>
   )
 }
+
+const styles = StyleSheet.create({
+  logoutButton: {
+    backgroundColor: colors.alert,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: borderRadius.sm,
+    marginRight: 8,
+  },
+})

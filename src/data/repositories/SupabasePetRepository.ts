@@ -23,6 +23,7 @@ const toDomain = (raw: SupabasePet): Pet => ({
   mainPhotoUrl: raw.main_photo_url ?? undefined,
   createdAt: raw.created_at,
   updatedAt: raw.updated_at,
+  shelters: raw.shelters ?? undefined,
 })
 
 const toSupabase = (pet: Partial<Pet>): Record<string, any> => {

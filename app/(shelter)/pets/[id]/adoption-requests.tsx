@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
-import { FlatList, Alert } from 'react-native'
-import { YStack, XStack, Text, Button, Card, Avatar, Spinner } from 'tamagui'
-import LottieView from 'lottie-react-native'
 import { useLocalSearchParams } from 'expo-router'
-import { acceptAdoptionRequestUseCase, rejectAdoptionRequestUseCase } from '../../../../src/di/container'
+import LottieView from 'lottie-react-native'
+import { useEffect, useState } from 'react'
+import { Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { supabase } from '../../../../src/data/supabase/client'
+import { acceptAdoptionRequestUseCase, rejectAdoptionRequestUseCase } from '../../../../src/di/container'
+import { colors, borderRadius, shadows } from '../../../../src/presentation/theme'
+import { StatusBar } from 'expo-status-bar'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function AdoptionRequestsScreen() {
   const { id: petId } = useLocalSearchParams()
@@ -52,59 +54,190 @@ export default function AdoptionRequestsScreen() {
 
   if (loading) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center">
+      <View style={styles.centered}>
         <LottieView source={require('../../../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
-      </YStack>
+      </View>
     )
   }
 
   if (requests.length === 0) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" gap="$4">
+      <View style={styles.centered}>
         <LottieView source={require('../../../../assets/lottie/empty-pets.json')} autoPlay loop style={{ width: 180, height: 180 }} />
-        <Text>No hay solicitudes aún</Text>
-      </YStack>
+        <Text style={styles.emptyText}>No hay solicitudes aún</Text>
+      </View>
     )
   }
 
   return (
-    <FlatList
+    <View style={{ flex: 1 }}>
+      <StatusBar style="dark" />
+      <FlatList
       data={requests}
       keyExtractor={r => r.id}
-      contentContainerStyle={{ padding: 16, gap: 12 }}
+      contentContainerStyle={styles.listContent}
       renderItem={({ item }) => (
-        <Card padding="$4" borderRadius={12} elevate>
-          <XStack gap="$3" alignItems="center">
-            <Avatar circular size="$5">
-              <Avatar.Image src={item.profiles?.avatar_url || ''} />
-              <Avatar.Fallback backgroundColor="$backgroundHover">
-                <Text>{item.profiles?.full_name?.[0] ?? '?'}</Text>
-              </Avatar.Fallback>
-            </Avatar>
-            <YStack flex={1}>
-              <Text fontWeight="bold">{item.profiles?.full_name}</Text>
-              <Text fontSize={12} color="$colorMuted">{new Date(item.created_at).toLocaleDateString()}</Text>
-            </YStack>
-            <Text
-              fontSize={12} fontWeight="bold"
-              color={item.status === 'pending' ? '$yellow10' : item.status === 'accepted' ? '$green10' : '$red10'}
-            >
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.avatar}>
+              {item.profiles?.avatar_url ? (
+                <Image source={{ uri: item.profiles.avatar_url }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarFallback}>
+                  <Text style={styles.avatarText}>{item.profiles?.full_name?.[0] ?? '?'}</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{item.profiles?.full_name}</Text>
+              <Text style={styles.userDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+            </View>
+            <Text style={[
+              styles.status,
+              item.status === 'pending' && styles.statusPending,
+              item.status === 'accepted' && styles.statusAccepted,
+              item.status === 'rejected' && styles.statusRejected
+            ]}>
               {item.status === 'pending' ? 'Pendiente' : item.status === 'accepted' ? 'Aceptada' : 'Rechazada'}
             </Text>
-          </XStack>
+          </View>
 
           {item.message && (
-            <Text mt="$2" color="$colorMuted" fontSize={14}>{item.message}</Text>
+            <Text style={styles.message}>{item.message}</Text>
           )}
 
           {item.status === 'pending' && (
-            <XStack gap="$2" mt="$3">
-              <Button flex={1} backgroundColor="$green8" onPress={() => handleAccept(item.id)}>Aceptar</Button>
-              <Button flex={1} backgroundColor="$red8" onPress={() => handleReject(item.id)}>Rechazar</Button>
-            </XStack>
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.acceptButton]}
+                onPress={() => handleAccept(item.id)}
+              >
+                <Feather name="check" size={16} color="white" />
+                <Text style={styles.acceptButtonText}>  Aceptar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.rejectButton]}
+                onPress={() => handleReject(item.id)}
+              >
+                <Feather name="x" size={16} color="white" />
+                <Text style={styles.rejectButtonText}>  Rechazar</Text>
+              </TouchableOpacity>
+            </View>
           )}
-        </Card>
+        </View>
       )}
     />
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textLight,
+    marginTop: 16,
+  },
+  listContent: {
+    padding: 16,
+    gap: 12,
+    backgroundColor: colors.background,
+  },
+  card: {
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: borderRadius.md,
+    ...shadows.card,
+    gap: 12,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarFallback: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.textLight,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  userDate: {
+    fontSize: 12,
+    color: colors.textLight,
+  },
+  status: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  statusPending: {
+    color: '#F5A623',
+  },
+  statusAccepted: {
+    color: colors.secondary,
+  },
+  statusRejected: {
+    color: colors.alert,
+  },
+  message: {
+    fontSize: 14,
+    color: colors.textLight,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  acceptButton: {
+    backgroundColor: colors.secondary,
+  },
+  rejectButton: {
+    backgroundColor: colors.alert,
+  },
+  acceptButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  rejectButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+})

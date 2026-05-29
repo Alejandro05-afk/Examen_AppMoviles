@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Alert } from 'react-native'
-import { YStack, Text, Input, Button } from 'tamagui'
+import { Alert, Pressable, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native'
 import { Link } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
 import { resetPasswordUseCase } from '../../src/di/container'
+import { colors, borderRadius, shadows } from '../../src/presentation/theme'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('')
@@ -24,39 +26,56 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
-      <YStack flex={1} padding="$6" gap="$4" justifyContent="center" backgroundColor="$background">
-        <Text fontSize={22} fontWeight="bold" textAlign="center" color="$primary">
-          📧 Revisa tu email
-        </Text>
-        <Text textAlign="center" color="$colorMuted">
-          Te hemos enviado un enlace para restablecer tu contraseña.
-        </Text>
+      <View style={styles.container}>
+        <Feather name="check-circle" size={64} color={colors.secondary} />
+        <Text style={styles.title}>Revisa tu email</Text>
+        <Text style={styles.subtitle}>Te hemos enviado un enlace para restablecer tu contraseña.</Text>
         <Link href="/(auth)/login" asChild>
-          <Button>Volver al inicio de sesión</Button>
+          <Pressable style={styles.buttonOutline}>
+            <Feather name="arrow-left" size={18} color={colors.primary} />
+            <Text style={styles.buttonOutlineText}>  Volver al inicio de sesión</Text>
+          </Pressable>
         </Link>
-      </YStack>
+      </View>
     )
   }
 
   return (
-    <YStack flex={1} padding="$6" gap="$4" justifyContent="center" backgroundColor="$background">
-      <Text fontSize={24} fontWeight="bold" textAlign="center">Restablecer Contraseña</Text>
-      <Text textAlign="center" color="$colorMuted" mb="$2">
-        Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
-      </Text>
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+      <Feather name="lock" size={48} color={colors.primary} />
+      <Text style={styles.title}>Restablecer contraseña</Text>
+      <Text style={styles.subtitle}>Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.</Text>
 
-      <Input placeholder="Email" value={email} onChangeText={setEmail}
-        autoCapitalize="none" keyboardType="email-address" />
+      <View style={styles.inputContainer}>
+        <Feather name="mail" size={18} color={colors.textLight} style={styles.inputIcon} />
+        <TextInput placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" style={styles.input} placeholderTextColor={colors.textLight} />
+      </View>
 
-      <Button onPress={handleReset} disabled={loading} backgroundColor="$primary">
-        {loading ? 'Enviando...' : 'Enviar enlace'}
-      </Button>
+      <Pressable style={[styles.button, loading && styles.buttonDisabled]} onPress={handleReset} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <><Feather name="send" size={18} color="white" /><Text style={styles.buttonText}>  Enviar enlace</Text></>}
+      </Pressable>
 
       <Link href="/(auth)/login" asChild>
-        <Text textAlign="center" color="$primary" fontSize={14} textDecorationLine="underline">
-          Volver al inicio de sesión
-        </Text>
+        <Pressable>
+          <Text style={styles.inlineLink}>Volver al inicio de sesión</Text>
+        </Pressable>
       </Link>
-    </YStack>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: colors.background, gap: 16, alignItems: 'center' },
+  title: { fontSize: 28, fontWeight: '800', textAlign: 'center', color: colors.text },
+  subtitle: { fontSize: 15, textAlign: 'center', color: colors.textLight },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: borderRadius.md, paddingHorizontal: 14, width: '100%' },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, paddingVertical: 14, fontSize: 16, color: colors.text },
+  button: { flexDirection: 'row', backgroundColor: colors.primary, borderRadius: borderRadius.md, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', width: '100%', ...shadows.button },
+  buttonDisabled: { opacity: 0.7 },
+  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
+  buttonOutline: { flexDirection: 'row', borderWidth: 1, borderColor: colors.primary, borderRadius: borderRadius.md, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: colors.card },
+  buttonOutlineText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
+  inlineLink: { textAlign: 'center', color: colors.primary, fontWeight: '600', fontSize: 14 },
+})

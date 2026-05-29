@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react'
-import { FlatList, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native'
-import { YStack, XStack, Input, Button, Text } from 'tamagui'
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import Markdown from 'react-native-markdown-display'
 import LottieView from 'lottie-react-native'
 import { sendAIMessageUseCase } from '../../src/di/container'
+import { useColorScheme } from 'react-native'
+import Feather from '@expo/vector-icons/Feather'
+import { colors, borderRadius } from '../../src/presentation/theme'
 
 interface Message { id: string; role: 'user' | 'assistant'; text: string }
 
@@ -14,6 +16,7 @@ export default function AIChatScreen() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const flatRef = useRef<FlatList>(null)
+  const isDark = useColorScheme() === 'dark'
 
   const send = async () => {
     if (!input.trim()) return
@@ -36,14 +39,13 @@ export default function AIChatScreen() {
     }
   }
 
-  const isDark = useColorScheme() === 'dark'
-
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       style={{ flex: 1 }}
     >
-      <YStack flex={1} backgroundColor="$background">
+      <View style={{ flex: 1, backgroundColor: isDark ? '#000' : '#fff' }}>
         <FlatList
           ref={flatRef}
           data={messages}
@@ -51,21 +53,25 @@ export default function AIChatScreen() {
           onContentSizeChange={() => flatRef.current?.scrollToEnd()}
           contentContainerStyle={{ padding: 16, gap: 8 }}
           renderItem={({ item }) => (
-            <XStack justifyContent={item.role === 'user' ? 'flex-end' : 'flex-start'}>
-              <YStack
-                maxWidth="80%"
-                backgroundColor={item.role === 'user' ? '$primary' : '$backgroundHover'}
-                padding="$3" borderRadius={16}
-                borderBottomRightRadius={item.role === 'user' ? 4 : 16}
-                borderBottomLeftRadius={item.role === 'assistant' ? 4 : 16}
-              >
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: item.role === 'user' ? 'flex-end' : 'flex-start',
+            }}>
+              <View style={{
+                maxWidth: '80%',
+                backgroundColor: item.role === 'user' ? '#6C63FF' : (isDark ? '#1a1a2e' : '#f0f0f5'),
+                padding: 12,
+                borderRadius: 16,
+                borderBottomRightRadius: item.role === 'user' ? 4 : 16,
+                borderBottomLeftRadius: item.role === 'assistant' ? 4 : 16,
+              }}>
                 {item.role === 'user' ? (
-                  <Text color="white">{item.text}</Text>
+                  <Text style={{ color: '#fff' }}>{item.text}</Text>
                 ) : (
                   <Markdown style={markdownStyles(isDark)}>{item.text}</Markdown>
                 )}
-              </YStack>
-            </XStack>
+              </View>
+            </View>
           )}
           ListFooterComponent={loading ? (
             <LottieView
@@ -75,17 +81,47 @@ export default function AIChatScreen() {
           ) : null}
         />
 
-        <XStack padding="$3" gap="$2" borderTopWidth={1} borderTopColor="$borderColor">
-          <Input
-            flex={1} placeholder="Pregunta sobre cuidados, salud..."
-            value={input} onChangeText={setInput}
+        <View style={{
+          flexDirection: 'row',
+          padding: 12,
+          gap: 8,
+          borderTopWidth: 1,
+          borderTopColor: isDark ? '#333' : '#e0e0e0',
+          alignItems: 'center',
+        }}>
+          <TextInput
+            style={{
+              flex: 1,
+              backgroundColor: isDark ? '#1a1a2e' : '#f5f5f5',
+              borderRadius: 20,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              fontSize: 15,
+              color: isDark ? '#fff' : '#000',
+            }}
+            placeholder="Pregunta sobre cuidados, salud..."
+            placeholderTextColor={isDark ? '#888' : '#999'}
+            value={input}
+            onChangeText={setInput}
             onSubmitEditing={send}
           />
-          <Button onPress={send} disabled={loading} backgroundColor="$primary">
-            Enviar
-          </Button>
-        </XStack>
-      </YStack>
+          <TouchableOpacity
+            onPress={send}
+            disabled={loading || !input.trim()}
+            style={{
+              backgroundColor: '#6C63FF',
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: loading || !input.trim() ? 0.5 : 1,
+            }}
+          >
+            <Feather name="send" size={18} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   )
 }

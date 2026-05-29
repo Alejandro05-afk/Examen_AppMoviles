@@ -1,16 +1,14 @@
-import { TamaguiProvider } from 'tamagui'
-import { tamaguiConfig } from '../tamagui.config'
-import { useColorScheme } from 'react-native'
+import { Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter'
 import { useFonts } from 'expo-font'
 import { SplashScreen, Stack } from 'expo-router'
-import { useEffect } from 'react'
 import * as WebBrowser from 'expo-web-browser'
+import { useEffect } from 'react'
+import { NotificationsDataSource } from '../src/data/datasources/NotificationsDataSource'
+import { SupabaseAuthRepository } from '../src/data/repositories/SupabaseAuthRepository'
+import { supabase } from '../src/data/supabase/client'
+import { getOrCreateShelterForUser } from '../src/data/supabase/shelterHelpers'
 import { LottieSplash } from '../src/presentation/components/common/LottieSplash'
 import { useAuthStore } from '../src/presentation/store/authStore'
-import { supabase } from '../src/data/supabase/client'
-import { SupabaseAuthRepository } from '../src/data/repositories/SupabaseAuthRepository'
-import { NotificationsDataSource } from '../src/data/datasources/NotificationsDataSource'
-import { getOrCreateShelterForUser } from '../src/data/supabase/shelterHelpers'
 
 WebBrowser.maybeCompleteAuthSession()
 SplashScreen.preventAutoHideAsync()
@@ -19,12 +17,11 @@ const authRepo = new SupabaseAuthRepository()
 const notificationsDS = new NotificationsDataSource()
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme()
   const { isLoading, isAuthenticated, user, setUser, setShelterId, setLoading } = useAuthStore()
 
   const [loaded] = useFonts({
-    Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
-    InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
+    Inter: Inter_400Regular,
+    InterBold: Inter_700Bold,
   })
 
   useEffect(() => {
@@ -68,7 +65,7 @@ export default function RootLayout() {
   }
 
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'light'}>
+    <>
       {!loaded || isLoading ? (
         <LottieSplash />
       ) : (
@@ -81,6 +78,6 @@ export default function RootLayout() {
           <Stack.Screen name="auth/password-updated" />
         </Stack>
       )}
-    </TamaguiProvider>
+    </>
   )
 }

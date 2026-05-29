@@ -1,93 +1,122 @@
+import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { FlatList, Alert } from 'react-native'
-import { YStack, Text, Button } from 'tamagui'
-import { Link, useRouter } from 'expo-router'
-import LottieView from 'lottie-react-native'
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { PetUiCard } from '../../../src/presentation/components/pets/PetUiCard'
 import { usePets } from '../../../src/presentation/hooks/usePets'
 import { useAuthStore } from '../../../src/presentation/store/authStore'
-import { PetCard } from '../../../src/presentation/components/pets/PetCard'
-import { getOrCreateShelterForUser } from '../../../src/data/supabase/shelterHelpers'
+import { colors, borderRadius } from '../../../src/presentation/theme'
+import { StatusBar } from 'expo-status-bar'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function ShelterPetsScreen() {
   const router = useRouter()
-  const { user, shelterId, setShelterId } = useAuthStore()
-  const { shelterPets, fetchShelterPets, deletePet } = usePets()
+  const { shelterId } = useAuthStore()
+  const { shelterPets, fetchShelterPets } = usePets()
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
-    loadPets()
-  }, [])
+    if (shelterId) {
+      loadPets()
+    }
+  }, [shelterId])
 
   const loadPets = async () => {
-    if (!user) return
+    if (!shelterId) return
     try {
-      const currentShelterId = shelterId ?? await getOrCreateShelterForUser(user)
-      setShelterId(currentShelterId)
-      await fetchShelterPets(currentShelterId)
-    } catch (e) {
-      console.error(e)
+      await fetchShelterPets(shelterId)
+    } catch (error: any) {
+      console.error('Error al cargar mascotas:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDelete = (petId: string, petName: string) => {
-    Alert.alert('Eliminar', `¿Eliminar a ${petName}?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: async () => {
-        try {
-          await deletePet(petId)
-        } catch (e: any) {
-          Alert.alert('Error', e.message)
-        }
-      }}
-    ])
+  const onRefresh = () => {
+    setRefreshing(true)
+    loadPets().finally(() => setRefreshing(false))
   }
 
   if (loading) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <LottieView source={require('../../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
-      </YStack>
-    )
-  }
-
-  if (shelterPets.length === 0) {
-    return (
-      <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$4">
-        <LottieView source={require('../../../assets/lottie/empty-pets.json')} autoPlay loop style={{ width: 180, height: 180 }} />
-        <Text fontSize={16} color="$colorMuted">No tienes mascotas registradas</Text>
-        <Link href="/(shelter)/pets/create" asChild>
-          <Button backgroundColor="$primary">Publicar mi primera mascota</Button>
-        </Link>
-      </YStack>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     )
   }
 
   return (
-    <YStack flex={1} backgroundColor="$background">
+    <View style={styles.container}>
+      <StatusBar style="dark" />
       <FlatList
         data={shelterPets}
         keyExtractor={p => p.id}
-        contentContainerStyle={{ padding: 16, gap: 12 }}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Feather name="users" size={48} color={colors.textLight} />
+            <Text style={styles.emptyText}>No tienes mascotas registradas</Text>
+            <Text style={styles.emptySubtext}>Agrega tu primera mascota para empezar a recibir solicitudes de adopción</Text>
+          </View>
+        }
         renderItem={({ item }) => (
-          <PetCard
-            name={item.name}
-            species={item.species}
-            breed={item.breed}
-            mainPhotoUrl={item.mainPhotoUrl}
-            status={item.status}
-            onPress={() => router.push(`/(shelter)/pets/${item.id}/edit` as any)}
-          />
+          <TouchableOpacity
+            onPress={() => router.push(`/(shelter)/pets/${item.id}/edit`)}
+          >
+            <PetUiCard
+              id={item.id}
+              name={item.name}
+              species={item.species}
+              breed={item.breed}
+              age={
+                item.ageYears > 0
+                  ? `${item.ageYears} ${item.ageYears === 1 ? 'año' : 'años'}`
+                  : item.ageMonths > 0
+                  ? `${item.ageMonths} ${item.ageMonths === 1 ? 'mes' : 'meses'}`
+                  : undefined
+              }
+              mainPhotoUrl={item.mainPhotoUrl}
+              location="Mi refugio"
+            />
+          </TouchableOpacity>
         )}
       />
-      <Link href="/(shelter)/pets/create" asChild>
-        <Button position="absolute" bottom={20} right={20}
-          width={56} height={56} borderRadius={28}
-          backgroundColor="$primary" elevate>
-          +
-        </Button>
-      </Link>
-    </YStack>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingTop: 4,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listContent: {
+    padding: 16,
+    gap: 16,
+  },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 80,
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textLight,
+    textAlign: 'center',
+  },
+})

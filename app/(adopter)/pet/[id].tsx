@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
-import { ScrollView } from 'react-native'
 import { Image } from 'expo-image'
-import { YStack, XStack, Text, Button, Card, Spinner } from 'tamagui'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useAuthStore } from '../../../src/presentation/store/authStore'
+import { useEffect, useState } from 'react'
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { supabase } from '../../../src/data/supabase/client'
+import { useAuthStore } from '../../../src/presentation/store/authStore'
+import { colors, borderRadius, shadows, typography } from '../../../src/presentation/theme'
+import { StatusBar } from 'expo-status-bar'
+import Feather from '@expo/vector-icons/Feather'
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/800x600/e2e8f0/a1a1aa?text=Pet'
 
@@ -35,68 +37,189 @@ export default function PetDetailScreen() {
 
   if (loading) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner size="large" />
-      </YStack>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     )
   }
 
   return (
-    <ScrollView>
-      <YStack backgroundColor="$background">
+    <ScrollView style={styles.container}>
+      <StatusBar style="dark" />
+      <View style={styles.content}>
         <Image
           source={pet.main_photo_url || PLACEHOLDER_IMAGE}
           contentFit="cover"
           transition={150}
-          style={{ width: '100%', height: 280 }}
+          style={styles.image}
         />
 
-        <YStack padding="$4" gap="$3">
-          <YStack>
-            <Text fontSize={24} fontWeight="bold">{pet.name}</Text>
-            <XStack gap="$2" mt="$1">
-              <Text color="$color" textTransform="capitalize">{pet.species}</Text>
-              {pet.breed && <Text color="$color">- {pet.breed}</Text>}
-              <Text color="$color">- {pet.gender === 'male' ? 'Macho' : 'Hembra'}</Text>
-            </XStack>
-          </YStack>
+        <View style={styles.info}>
+          <View style={styles.nameSection}>
+            <Text style={styles.name}>{pet.name}</Text>
+            <View style={styles.details}>
+              <Feather name={pet.species === 'dog' ? 'user' : pet.species === 'cat' ? 'user' : 'user'} size={14} color={colors.textLight} />
+              <Text style={styles.detail}>{pet.species}</Text>
+              {pet.breed && <Text style={styles.detail}>• {pet.breed}</Text>}
+              <Text style={styles.detail}>• {pet.gender === 'male' ? 'Macho' : 'Hembra'}</Text>
+            </View>
+          </View>
 
-          <XStack gap="$2" flexWrap="wrap">
-            {pet.is_vaccinated && <Text fontSize={12} backgroundColor="$green3" padding="$1" borderRadius={4}>Vacunado</Text>}
-            {pet.is_sterilized && <Text fontSize={12} backgroundColor="$green3" padding="$1" borderRadius={4}>Esterilizado</Text>}
-            {pet.is_dewormed && <Text fontSize={12} backgroundColor="$green3" padding="$1" borderRadius={4}>Desparasitado</Text>}
-            <Text fontSize={12} backgroundColor="$backgroundHover" padding="$1" borderRadius={4}>
-              {pet.size === 'small' ? 'Pequeno' : pet.size === 'medium' ? 'Mediano' : 'Grande'}
-            </Text>
-          </XStack>
+          <View style={styles.badges}>
+            {pet.is_vaccinated && <View style={styles.badge}><Feather name="check" size={12} color={colors.secondary} /><Text style={styles.badgeText}> Vacunado</Text></View>}
+            {pet.is_sterilized && <View style={styles.badge}><Feather name="check" size={12} color={colors.secondary} /><Text style={styles.badgeText}> Esterilizado</Text></View>}
+            {pet.is_dewormed && <View style={styles.badge}><Feather name="check" size={12} color={colors.secondary} /><Text style={styles.badgeText}> Desparasitado</Text></View>}
+            <View style={[styles.badge, styles.sizeBadge]}>
+              <Feather name="maximize" size={12} color={colors.textLight} />
+              <Text style={styles.badgeText}> {pet.size === 'small' ? 'Pequeño' : pet.size === 'medium' ? 'Mediano' : 'Grande'}</Text>
+            </View>
+          </View>
 
           {pet.description && (
-            <YStack>
-              <Text fontWeight="bold" fontSize={16}>Descripcion</Text>
-              <Text color="$colorMuted" mt="$1">{pet.description}</Text>
-            </YStack>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Descripción</Text>
+              <Text style={styles.description}>{pet.description}</Text>
+            </View>
           )}
 
-          <Card padding="$3" borderRadius={12} backgroundColor="$backgroundHover">
-            <Text fontWeight="bold">{pet.shelters?.name}</Text>
-            {pet.shelters?.address && <Text fontSize={13} color="$colorMuted">{pet.shelters?.address}</Text>}
-            {pet.shelters?.phone && <Text fontSize={13} color="$colorMuted">{pet.shelters?.phone}</Text>}
-          </Card>
+          <View style={styles.shelterCard}>
+            <View style={styles.shelterHeader}>
+              <Feather name="home" size={18} color={colors.primary} />
+              <Text style={styles.shelterName}> {pet.shelters?.name}</Text>
+            </View>
+            {pet.shelters?.address && <View style={styles.shelterRow}><Feather name="map-pin" size={14} color={colors.textLight} /><Text style={styles.shelterDetail}> {pet.shelters?.address}</Text></View>}
+            {pet.shelters?.phone && <View style={styles.shelterRow}><Feather name="phone" size={14} color={colors.textLight} /><Text style={styles.shelterDetail}> {pet.shelters?.phone}</Text></View>}
+          </View>
 
           {pet.status === 'available' && (
-            <Button onPress={handleAdopt}
-              backgroundColor="$primary" size="$5">
-              Solicitar adopción
-            </Button>
+            <TouchableOpacity style={styles.button} onPress={handleAdopt}>
+              <Feather name="heart" size={18} color="white" />
+              <Text style={styles.buttonText}>  Solicitar adopción</Text>
+            </TouchableOpacity>
           )}
 
           {pet.status !== 'available' && (
-            <Button disabled backgroundColor="$gray8" size="$5">
-              {pet.status === 'pending' ? 'En proceso de adopcion' : 'Ya adoptado'}
-            </Button>
+            <TouchableOpacity style={[styles.button, styles.buttonDisabled]} disabled>
+              <Feather name={pet.status === 'pending' ? 'clock' : 'x-circle'} size={18} color="white" />
+              <Text style={styles.buttonText}>  {pet.status === 'pending' ? 'En proceso de adopción' : 'Ya adoptado'}</Text>
+            </TouchableOpacity>
           )}
-        </YStack>
-      </YStack>
+        </View>
+      </View>
     </ScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    backgroundColor: colors.background,
+  },
+  image: {
+    width: '100%',
+    height: 280,
+  },
+  info: {
+    padding: 16,
+    gap: 16,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nameSection: {
+    gap: 4,
+  },
+  name: {
+    ...typography.h2,
+    color: colors.text,
+  },
+  details: {
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 4,
+    alignItems: 'center',
+  },
+  detail: {
+    ...typography.body,
+    color: colors.text,
+    textTransform: 'capitalize',
+  },
+  badges: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F7ED',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  sizeBadge: {
+    backgroundColor: colors.background,
+  },
+  badgeText: {
+    fontSize: 12,
+    color: colors.text,
+  },
+  section: {
+    gap: 4,
+  },
+  sectionTitle: {
+    ...typography.h3,
+    color: colors.text,
+  },
+  description: {
+    fontSize: 14,
+    color: colors.textLight,
+    marginTop: 4,
+  },
+  shelterCard: {
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: borderRadius.md,
+    gap: 8,
+    ...shadows.card,
+  },
+  shelterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shelterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shelterName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  shelterDetail: {
+    fontSize: 13,
+    color: colors.textLight,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    ...shadows.button,
+  },
+  buttonDisabled: {
+    backgroundColor: colors.textLight,
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+})

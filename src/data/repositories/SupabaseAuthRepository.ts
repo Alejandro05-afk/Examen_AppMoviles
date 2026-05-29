@@ -1,9 +1,9 @@
-import { supabase } from '../supabase/client'
-import { IAuthRepository } from '../../domain/repositories/IAuthRepository'
-import { User } from '../../domain/entities/User'
-import { Platform } from 'react-native'
 import * as AuthSession from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
+import { Platform } from 'react-native'
+import { User } from '../../domain/entities/User'
+import { IAuthRepository } from '../../domain/repositories/IAuthRepository'
+import { supabase } from '../supabase/client'
 
 const getWebAuthUrl = () => {
   const webAuthUrl = process.env.EXPO_PUBLIC_WEB_AUTH_URL?.replace(/\/$/, '')
@@ -104,28 +104,47 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async completeOAuthSessionFromUrl(url: string): Promise<User | null> {
+    console.log('🔍 completeOAuthSessionFromUrl - URL:', url)
     const params = getParamsFromUrl(url)
+    console.log('📋 Parámetros extraídos:', Object.fromEntries(params.entries()))
+
     const error = params.get('error') ?? params.get('error_code')
     if (error) {
+      console.log('❌ Error en parámetros:', error)
       throw new Error(params.get('error_description') ?? error)
     }
 
     const code = params.get('code')
+    console.log('🔑 Code presente:', !!code)
     if (code) {
+      console.log('🔄 Intercambiando code por sesión...')
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-      if (error) throw new Error(error.message)
+      if (error) {
+        console.log('💥 Error intercambiando code:', error.message)
+        throw new Error(error.message)
+      }
+      console.log('✅ Sesión obtenida del code, user:', data.user?.id)
       return data.user ? this.mapToUser(data.user) : null
     }
 
     const accessToken = params.get('access_token')
     const refreshToken = params.get('refresh_token')
-    if (!accessToken || !refreshToken) return null
+    console.log('🔑 Access token presente:', !!accessToken, 'Refresh token presente:', !!refreshToken)
+    if (!accessToken || !refreshToken) {
+      console.log('⚠️ No hay code ni tokens, retornando null')
+      return null
+    }
 
+    console.log('🔄 Estableciendo sesión con tokens...')
     const { data, error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     })
-    if (sessionError) throw new Error(sessionError.message)
+    if (sessionError) {
+      console.log('💥 Error estableciendo sesión:', sessionError.message)
+      throw new Error(sessionError.message)
+    }
+    console.log('✅ Sesión establecida con tokens, user:', data.user?.id)
     return data.user ? this.mapToUser(data.user) : null
   }
 

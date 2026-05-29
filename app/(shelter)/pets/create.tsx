@@ -1,58 +1,52 @@
-import { useState } from 'react'
-import { YStack, Text } from 'tamagui'
-import LottieView from 'lottie-react-native'
+import { StyleSheet, View, Text } from 'react-native'
 import { useRouter } from 'expo-router'
+import { PetForm } from '../../../src/presentation/components/pets/PetForm'
 import { createPetUseCase } from '../../../src/di/container'
 import { useAuthStore } from '../../../src/presentation/store/authStore'
-import { PetForm, PetFormData } from '../../../src/presentation/components/pets/PetForm'
-import { getOrCreateShelterForUser } from '../../../src/data/supabase/shelterHelpers'
+import { colors } from '../../../src/presentation/theme'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function CreatePetScreen() {
   const router = useRouter()
-  const { user, shelterId, setShelterId } = useAuthStore()
-  const [success, setSuccess] = useState(false)
+  const { shelterId } = useAuthStore()
 
-  const handleSubmit = async (form: PetFormData, photoUri?: string) => {
-    if (!user) throw new Error('No se encontro el usuario')
-
-    const currentShelterId = shelterId ?? await getOrCreateShelterForUser(user)
-    setShelterId(currentShelterId)
-
-    await createPetUseCase.execute({
-      shelterId: currentShelterId,
-      name: form.name,
-      species: form.species as any,
-      breed: form.breed,
-      size: form.size as any,
-      gender: form.gender as any,
-      description: form.description,
-      ageYears: parseInt(form.ageYears),
-      ageMonths: 0,
-      isVaccinated: form.isVaccinated,
-      isSterilized: form.isSterilized,
-      isDewormed: form.isDewormed,
-      status: 'available',
-    }, photoUri)
-
-    setSuccess(true)
-    setTimeout(() => router.back(), 2000)
+  const handleSubmit = async (data: any, photoUri?: string) => {
+    try {
+      await createPetUseCase.execute({
+        ...data,
+        shelterId: shelterId!,
+      }, photoUri)
+      router.back()
+    } catch (error: any) {
+      throw error
+    }
   }
 
-  if (success) {
-    return (
-      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$background">
-        <LottieView
-          source={require('../../../assets/lottie/success.json')}
-          autoPlay
-          loop={false}
-          style={{ width: 200, height: 200 }}
-        />
-        <Text fontSize={18} fontWeight="bold" color="$color" mt="$4">
-          Mascota publicada
-        </Text>
-      </YStack>
-    )
-  }
-
-  return <PetForm onSubmit={handleSubmit} submitLabel="Publicar Mascota" />
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Feather name="plus-circle" size={24} color={colors.primary} />
+        <Text style={styles.title}>  Nueva Mascota</Text>
+      </View>
+      <PetForm onSubmit={handleSubmit} submitLabel="Crear Mascota" />
+    </View>
+  )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+})

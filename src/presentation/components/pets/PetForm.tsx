@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { ScrollView, Alert, Image, Pressable } from 'react-native'
-import { YStack, XStack, Text, Button, Input, Spinner } from 'tamagui'
+import { ScrollView, Alert, Image, Pressable, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, View, Text } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
+import { colors, borderRadius, shadows } from '../../theme'
+import Feather from '@expo/vector-icons/Feather'
 
 export interface PetFormData {
   name: string
@@ -64,100 +65,251 @@ export const PetForm = ({ initialData, onSubmit, submitLabel = 'Guardar', loadin
   }
 
   return (
-    <ScrollView>
-      <YStack padding="$4" gap="$4">
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
         <Pressable onPress={pickImage}>
-          <YStack height={200} borderRadius={12} backgroundColor="$backgroundHover"
-            alignItems="center" justifyContent="center" overflow="hidden">
+          <View style={styles.photoContainer}>
             {photoUri
-              ? <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%' }} />
+              ? <Image source={{ uri: photoUri }} style={styles.photo} />
               : initialData?.mainPhotoUrl
-                ? <Image source={{ uri: initialData.mainPhotoUrl }} style={{ width: '100%', height: '100%' }} />
-                : <Text color="$colorMuted">📷 Toca para agregar foto</Text>
+                ? <Image source={{ uri: initialData.mainPhotoUrl }} style={styles.photo} />
+                : <Text style={styles.photoPlaceholder}>📷 Toca para agregar foto</Text>
             }
-          </YStack>
+          </View>
         </Pressable>
 
-        <Input placeholder="Nombre de la mascota" value={form.name}
-          onChangeText={v => setForm(p => ({ ...p, name: v }))} />
-        <Input placeholder="Raza (opcional)" value={form.breed}
-          onChangeText={v => setForm(p => ({ ...p, breed: v }))} />
-        <Input placeholder="Descripción" value={form.description}
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre de la mascota"
+          value={form.name}
+          onChangeText={v => setForm(p => ({ ...p, name: v }))}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Raza (opcional)"
+          value={form.breed}
+          onChangeText={v => setForm(p => ({ ...p, breed: v }))}
+        />
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Descripción"
+          value={form.description}
           onChangeText={v => setForm(p => ({ ...p, description: v }))}
-          multiline numberOfLines={3} />
-        <Input placeholder="Edad (años)" value={form.ageYears}
+          multiline
+          numberOfLines={3}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Edad (años)"
+          value={form.ageYears}
           onChangeText={v => setForm(p => ({ ...p, ageYears: v }))}
-          keyboardType="numeric" />
+          keyboardType="numeric"
+        />
 
-        <XStack gap="$2" flexWrap="wrap">
-          <YStack gap="$1" flex={1}>
-            <Text fontSize={12} color="$colorMuted">Especie</Text>
-            <XStack gap="$1">
-              {['dog', 'cat', 'rabbit', 'bird', 'other'].map(s => (
-                <Button key={s} size="$3" flex={1}
-                  onPress={() => setForm(p => ({ ...p, species: s }))}
-                  backgroundColor={form.species === s ? '$primary' : '$backgroundHover'}>
+        <View style={styles.section}>
+          <Text style={styles.label}>Especie</Text>
+          <View style={styles.buttonGroup}>
+            {['dog', 'cat', 'rabbit', 'bird', 'other'].map(s => (
+              <TouchableOpacity
+                key={s}
+                style={[styles.button, form.species === s && styles.buttonActive]}
+                onPress={() => setForm(p => ({ ...p, species: s }))}
+              >
+                <Text style={[styles.buttonText, form.species === s && styles.buttonTextActive]}>
                   {s === 'dog' ? 'Perro' : s === 'cat' ? 'Gato' : s === 'rabbit' ? 'Conejo' : s === 'bird' ? 'Ave' : 'Otro'}
-                </Button>
-              ))}
-            </XStack>
-          </YStack>
-        </XStack>
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-        <XStack gap="$2">
-          <YStack gap="$1" flex={1}>
-            <Text fontSize={12} color="$colorMuted">Tamaño</Text>
-            <XStack gap="$1">
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Text style={styles.label}>Tamaño</Text>
+            <View style={styles.buttonGroup}>
               {['small', 'medium', 'large'].map(s => (
-                <Button key={s} size="$3" flex={1}
+                <TouchableOpacity
+                  key={s}
+                  style={[styles.button, form.size === s && styles.buttonActive]}
                   onPress={() => setForm(p => ({ ...p, size: s }))}
-                  backgroundColor={form.size === s ? '$primary' : '$backgroundHover'}>
-                  {s === 'small' ? 'Peq' : s === 'medium' ? 'Med' : 'Grande'}
-                </Button>
+                >
+                  <Text style={[styles.buttonText, form.size === s && styles.buttonTextActive]}>
+                    {s === 'small' ? 'Peq' : s === 'medium' ? 'Med' : 'Grande'}
+                  </Text>
+                </TouchableOpacity>
               ))}
-            </XStack>
-          </YStack>
-          <YStack gap="$1" flex={1}>
-            <Text fontSize={12} color="$colorMuted">Género</Text>
-            <XStack gap="$1">
+            </View>
+          </View>
+          <View style={styles.half}>
+            <Text style={styles.label}>Género</Text>
+            <View style={styles.buttonGroup}>
               {['male', 'female'].map(g => (
-                <Button key={g} size="$3" flex={1}
+                <TouchableOpacity
+                  key={g}
+                  style={[styles.button, form.gender === g && styles.buttonActive]}
                   onPress={() => setForm(p => ({ ...p, gender: g }))}
-                  backgroundColor={form.gender === g ? '$primary' : '$backgroundHover'}>
-                  {g === 'male' ? 'Macho' : 'Hembra'}
-                </Button>
+                >
+                  <Text style={[styles.buttonText, form.gender === g && styles.buttonTextActive]}>
+                    {g === 'male' ? 'Macho' : 'Hembra'}
+                  </Text>
+                </TouchableOpacity>
               ))}
-            </XStack>
-          </YStack>
-        </XStack>
+            </View>
+          </View>
+        </View>
 
-        <XStack gap="$2" flexWrap="wrap">
+        <View style={styles.section}>
           {(['isVaccinated', 'isSterilized', 'isDewormed'] as const).map(key => (
-            <Button key={key} size="$3"
+            <TouchableOpacity
+              key={key}
+              style={[styles.button, form[key] && styles.buttonGreen]}
               onPress={() => setForm(p => ({ ...p, [key]: !p[key] }))}
-              backgroundColor={form[key] ? '$green8' : '$backgroundHover'}>
-              {key === 'isVaccinated' ? '✅ Vacunado' : key === 'isSterilized' ? '✅ Esterilizado' : '✅ Desparasitado'}
-            </Button>
+            >
+              <Text style={[styles.buttonText, form[key] && styles.buttonTextActive]}>
+                {key === 'isVaccinated' ? '✅ Vacunado' : key === 'isSterilized' ? '✅ Esterilizado' : '✅ Desparasitado'}
+              </Text>
+            </TouchableOpacity>
           ))}
-        </XStack>
+        </View>
 
         {showStatus && (
-          <XStack gap="$2">
-              {['available', 'pending', 'adopted'].map(s => (
-              <Button key={s} flex={1} size="$3"
+          <View style={styles.section}>
+            {['available', 'pending', 'adopted'].map(s => (
+              <TouchableOpacity
+                key={s}
+                style={[styles.button, form.status === s && styles.buttonActive, styles.buttonFull]}
                 onPress={() => setForm(p => ({ ...p, status: s }))}
-                backgroundColor={form.status === s ? '$primary' : '$backgroundHover'}>
-                {s === 'available' ? 'Disponible' : s === 'pending' ? 'Pendiente' : 'Adoptado'}
-              </Button>
+              >
+                <Text style={[styles.buttonText, form.status === s && styles.buttonTextActive]}>
+                  {s === 'available' ? 'Disponible' : s === 'pending' ? 'Pendiente' : 'Adoptado'}
+                </Text>
+              </TouchableOpacity>
             ))}
-          </XStack>
+          </View>
         )}
 
-        <Button onPress={handleSubmit} disabled={loading} backgroundColor="$primary"
-          icon={loading ? <Spinner /> : undefined}>
-          {loading ? 'Guardando...' : submitLabel}
-        </Button>
-      </YStack>
+        <TouchableOpacity
+          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <><Feather name="check" size={18} color="white" /><Text style={styles.submitButtonText}>{submitLabel}</Text></>
+          )}
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  photoContainer: {
+    height: 200,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+  },
+  photoPlaceholder: {
+    color: colors.textLight,
+    fontSize: 16,
+  },
+  input: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  section: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 12,
+    color: colors.textLight,
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  button: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 60,
+  },
+  buttonActive: {
+    backgroundColor: colors.primary,
+  },
+  buttonGreen: {
+    backgroundColor: colors.secondary,
+  },
+  buttonFull: {
+    flex: 1,
+  },
+  buttonText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  buttonTextActive: {
+    color: colors.white,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  half: {
+    flex: 1,
+    gap: 8,
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    ...shadows.button,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+})

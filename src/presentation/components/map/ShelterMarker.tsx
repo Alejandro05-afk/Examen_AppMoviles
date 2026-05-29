@@ -1,5 +1,7 @@
-import { Marker, Callout } from 'react-native-maps'
-import { YStack, Text } from 'tamagui'
+import { StyleSheet, Text, View } from 'react-native'
+import { Callout, Marker } from 'react-native-maps'
+import { colors } from '../../theme'
+import Feather from '@expo/vector-icons/Feather'
 
 interface Props {
   id: string
@@ -15,14 +17,35 @@ export const ShelterMarker = ({ id, name, latitude, longitude, address, phone }:
     key={id}
     coordinate={{ latitude, longitude }}
     title={name}
-    pinColor="red"
+    pinColor={colors.primary}
   >
     <Callout>
-      <YStack padding="$2" minWidth={150}>
-        <Text fontWeight="bold">{name}</Text>
-        {address && <Text fontSize={12}>{address}</Text>}
-        {phone && <Text fontSize={12}>📞 {phone}</Text>}
-      </YStack>
+      <View style={styles.container}>
+        <Text style={styles.name}>{name}</Text>
+        {address && <Text style={styles.detail}>{address}</Text>}
+        {phone && <View style={styles.phoneRow}><Feather name="phone" size={12} color={colors.textLight} /><Text style={styles.detail}> {phone}</Text></View>}
+      </View>
     </Callout>
   </Marker>
 )
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 8,
+    minWidth: 150,
+  },
+  name: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: colors.text,
+  },
+  detail: {
+    fontSize: 12,
+    color: colors.textLight,
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+})

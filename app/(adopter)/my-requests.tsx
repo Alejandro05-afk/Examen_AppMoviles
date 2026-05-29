@@ -1,84 +1,108 @@
 import { useEffect, useState } from 'react'
-import { FlatList } from 'react-native'
-import { Image } from 'expo-image'
-import { YStack, XStack, Text, Card } from 'tamagui'
-import LottieView from 'lottie-react-native'
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { getAdoptionRequestsUseCase } from '../../src/di/container'
+import { AdoptionRequestCard } from '../../src/presentation/components/adoption/AdoptionRequestCard'
 import { useAuthStore } from '../../src/presentation/store/authStore'
-import { supabase } from '../../src/data/supabase/client'
-
-const PLACEHOLDER_IMAGE = 'https://placehold.co/120x120/e2e8f0/a1a1aa?text=Pet'
+import { colors, borderRadius } from '../../src/presentation/theme'
+import { StatusBar } from 'expo-status-bar'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function MyRequestsScreen() {
   const { user } = useAuthStore()
   const [requests, setRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const fetchRequests = async () => {
+    if (!user) return
+    try {
+      const data = await getAdoptionRequestsUseCase.executeByAdopter(user.id)
+      setRequests(data)
+    } catch (error: any) {
+      console.error('Error al cargar solicitudes:', error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
 
   useEffect(() => {
-    loadRequests()
-  }, [])
+    fetchRequests()
+  }, [user])
 
-  const loadRequests = async () => {
-    const { data } = await supabase
-      .from('adoption_requests')
-      .select('*, pets(name, main_photo_url, species), shelters(name)')
-      .eq('adopter_id', user!.id)
-      .order('created_at', { ascending: false })
-    setRequests(data ?? [])
-    setLoading(false)
+  const onRefresh = () => {
+    setRefreshing(true)
+    fetchRequests()
   }
 
   if (loading) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center">
-        <LottieView source={require('../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
-      </YStack>
-    )
-  }
-
-  if (requests.length === 0) {
-    return (
-      <YStack flex={1} alignItems="center" justifyContent="center" gap="$4">
-        <LottieView source={require('../../assets/lottie/empty-pets.json')} autoPlay loop style={{ width: 180, height: 180 }} />
-        <Text>No has solicitado adopciones aun</Text>
-      </YStack>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     )
   }
 
   return (
-    <FlatList
-      data={requests}
-      keyExtractor={r => r.id}
-      contentContainerStyle={{ padding: 16, gap: 12 }}
-      renderItem={({ item }) => (
-        <Card padding="$4" borderRadius={12} elevate>
-          <XStack gap="$3" alignItems="center">
-            <Image
-              source={item.pets?.main_photo_url || PLACEHOLDER_IMAGE}
-              contentFit="cover"
-              transition={150}
-              style={{ width: 56, height: 56, borderRadius: 28 }}
-            />
-            <YStack flex={1}>
-              <Text fontWeight="bold">{item.pets?.name}</Text>
-              <Text fontSize={12} color="$colorMuted">
-                {item.shelters?.name} - {new Date(item.created_at).toLocaleDateString()}
-              </Text>
-            </YStack>
-            <Text
-              fontSize={12}
-              fontWeight="bold"
-              color={item.status === 'pending' ? '$yellow10' : item.status === 'accepted' ? '$green10' : '$red10'}
-            >
-              {item.status === 'pending' ? 'Pendiente' : item.status === 'accepted' ? 'Aceptada' : 'Rechazada'}
-            </Text>
-          </XStack>
-          {item.shelter_response && (
-            <Text mt="$2" fontSize={13} color="$colorMuted" fontStyle="italic">
-              Respuesta: {item.shelter_response}
-            </Text>
-          )}
-        </Card>
-      )}
-    />
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+      <FlatList
+        data={requests}
+        keyExtractor={r => r.id}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Feather name="inbox" size={48} color={colors.textLight} />
+            <Text style={styles.emptyText}>No tienes solicitudes de adopción</Text>
+            <Text style={styles.emptySubtext}>Explora mascotas y envía tu primera solicitud</Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <AdoptionRequestCard
+            fullName={item.shelters?.name || 'Refugio'}
+            avatarUrl={item.shelters?.avatar_url}
+            message={item.reason}
+            status={item.status}
+            createdAt={item.created_at}
+          />
+        )}
+      />
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingTop: 4,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listContent: {
+    padding: 16,
+    gap: 16,
+  },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 80,
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textLight,
+    textAlign: 'center',
+  },
+})

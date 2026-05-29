@@ -1,10 +1,11 @@
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { Alert } from 'react-native'
-import { YStack, Text, Button } from 'tamagui'
-import { useRouter, useLocalSearchParams } from 'expo-router'
-import { updatePetUseCase, deletePetUseCase } from '../../../../src/di/container'
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { supabase } from '../../../../src/data/supabase/client'
+import { deletePetUseCase, updatePetUseCase } from '../../../../src/di/container'
 import { PetForm, PetFormData } from '../../../../src/presentation/components/pets/PetForm'
+import { colors, borderRadius } from '../../../../src/presentation/theme'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function EditPetScreen() {
   const router = useRouter()
@@ -66,18 +67,44 @@ export default function EditPetScreen() {
   if (!initialData) return null
 
   return (
-    <YStack flex={1}>
+    <View style={styles.container}>
       <PetForm
         initialData={initialData}
         onSubmit={handleSubmit}
         submitLabel="Guardar Cambios"
         showStatus
       />
-      <YStack padding="$4" pt={0}>
-        <Button onPress={handleDelete} backgroundColor="$red8">
-          Eliminar Mascota
-        </Button>
-      </YStack>
-    </YStack>
+      <View style={styles.deleteSection}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Feather name="trash-2" size={18} color="white" />
+          <Text style={styles.deleteButtonText}>Eliminar Mascota</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  deleteSection: {
+    padding: 16,
+    paddingTop: 0,
+  },
+  deleteButton: {
+    backgroundColor: colors.alert,
+    paddingVertical: 16,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  deleteButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+})

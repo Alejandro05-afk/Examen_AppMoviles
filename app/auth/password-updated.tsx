@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { router } from 'expo-router'
 import { StyleSheet, Text, View } from 'react-native'
+import { colors } from '../../src/presentation/theme'
+import Feather from '@expo/vector-icons/Feather'
 
 export default function PasswordUpdatedScreen() {
   useEffect(() => {
@@ -10,8 +12,9 @@ export default function PasswordUpdatedScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Contrasena actualizada</Text>
-      <Text>Volviendo al inicio de sesion...</Text>
+      <Feather name="check-circle" size={64} color={colors.secondary} />
+      <Text style={styles.title}>Contraseña actualizada</Text>
+      <Text style={styles.subtitle}>Volviendo al inicio de sesión...</Text>
     </View>
   )
 }
@@ -21,11 +24,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 12,
     padding: 24,
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
+    color: colors.text,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.textLight,
   },
 })
