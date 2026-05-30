@@ -1,57 +1,69 @@
 import * as Linking from 'expo-linking'
 import { router } from 'expo-router'
+import LottieView from 'lottie-react-native'
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
+import { useAuthStore } from '../../src/presentation/store/authStore'
 import { colors } from '../../src/presentation/theme'
 
 export default function AuthCallbackScreen() {
   const { completeOAuthSessionFromUrl } = useAuth()
+  const { isAuthenticated, user } = useAuthStore()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (isAuthenticated && user) {
+      router.replace(user.role === 'shelter' ? '/(shelter)/dashboard' : '/(adopter)/home')
+      return
+    }
+
     let mounted = true
+
+    const timeout = setTimeout(() => {
+      if (!mounted) return
+      setError('El inicio de sesión tardó demasiado. Intenta de nuevo.')
+    }, 15000)
 
     const handleUrl = async (url: string) => {
       console.log('🔗 URL recibida:', url)
       if (!mounted) return
       try {
         const user = await completeOAuthSessionFromUrl(url)
-        console.log('👤 Usuario:', user)
-        if (!mounted || !user) {
-          console.log('❌ No user, mounted:', mounted)
-          return
-        }
+        if (!mounted || !user) return
         router.replace(user.role === 'shelter' ? '/(shelter)/dashboard' : '/(adopter)/home')
       } catch (e: any) {
-        console.log('💥 Error:', e.message)
-        if (mounted) setError(e.message ?? 'No se pudo completar el inicio de sesion')
+        if (mounted) setError(e.message ?? 'No se pudo completar el inicio de sesión')
       }
     }
 
-    // Caso 1: app abierta en segundo plano (el más común)
     const subscription = Linking.addEventListener('url', (event) => {
       handleUrl(event.url)
     })
 
-    // Caso 2: app lanzada desde cero por el link
     Linking.getInitialURL().then((url) => {
       if (url) handleUrl(url)
     })
 
     return () => {
       mounted = false
+      clearTimeout(timeout)
       subscription.remove()
     }
-  }, [completeOAuthSessionFromUrl])
+  }, [completeOAuthSessionFromUrl, isAuthenticated, user])
 
   return (
     <View style={styles.container}>
       {error ? (
-        <Text style={styles.error}>{error}</Text>
+        <>
+          <Text style={styles.error}>{error}</Text>
+          <Text style={styles.retry} onPress={() => router.replace('/(auth)/login')}>
+            Volver al inicio de sesión
+          </Text>
+        </>
       ) : (
         <>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <LottieView source={require('../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
           <Text style={styles.loadingText}>Completando inicio de sesión...</Text>
         </>
       )}
@@ -79,5 +91,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
+  retry: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
 })
-

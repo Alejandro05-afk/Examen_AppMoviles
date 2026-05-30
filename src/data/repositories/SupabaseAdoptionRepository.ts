@@ -14,6 +14,12 @@ const toDomain = (raw: SupabaseAdoptionRequest): AdoptionRequest => ({
   shelterResponse: raw.shelter_response ?? undefined,
   createdAt: raw.created_at,
   updatedAt: raw.updated_at,
+  petName: (raw.pets as any)?.name ?? undefined,
+  petPhoto: (raw.pets as any)?.main_photo_url ?? undefined,
+  adopterName: (raw.profiles as any)?.full_name ?? raw.adopters?.full_name ?? undefined,
+  adopterAvatar: (raw.profiles as any)?.avatar_url ?? raw.adopters?.avatar_url ?? undefined,
+  adopterPhone: (raw.profiles as any)?.phone ?? raw.adopters?.phone ?? undefined,
+  shelterName: (raw.shelters as any)?.name ?? undefined,
 })
 
 const toDomainMany = (rawList: SupabaseAdoptionRequest[]): AdoptionRequest[] => rawList.map(toDomain)
@@ -27,7 +33,38 @@ export class SupabaseAdoptionRepository implements IAdoptionRepository {
       .single()
 
     if (error) throw new Error(error.message)
+
+    await this.notifyShelterNewRequest(shelterId, data)
     return toDomain(data!)
+  }
+
+  private async notifyShelterNewRequest(shelterId: string, requestData: any): Promise<void> {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('push_token')
+        .eq('id', shelterId)
+        .single()
+
+      if (!profile?.push_token) return
+
+      const petName = requestData.pets?.name ?? 'una mascota'
+      const adopterName = requestData.profiles?.full_name ?? 'Un adoptante'
+
+      const functionUrl = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-push`
+
+      await fetch(functionUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: profile.push_token,
+          title: '📩 Nueva solicitud de adopción',
+          body: `${adopterName} quiere adoptar a ${petName}`,
+        }),
+      })
+    } catch {
+      // Silently fail
+    }
   }
 
   async getRequestsByAdopter(adopterId: string): Promise<AdoptionRequest[]> {

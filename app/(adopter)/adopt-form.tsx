@@ -1,17 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollView, Alert, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity, Text, View, ActivityIndicator } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { useAuthStore } from '../../src/presentation/store/authStore'
 import { createAdoptionRequestUseCase } from '../../src/di/container'
 import { colors, borderRadius, shadows } from '../../src/presentation/theme'
+import { LottieSuccess } from '../../src/presentation/components/common/LottieSuccess'
 import { StatusBar } from 'expo-status-bar'
 import Feather from '@expo/vector-icons/Feather'
 
 export default function AdoptFormScreen() {
   const { petId, shelterId, petName } = useLocalSearchParams<{ petId: string; shelterId: string; petName: string }>()
   const router = useRouter()
+  const navigation = useNavigation()
   const { user } = useAuthStore()
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity style={{ paddingHorizontal: 8, marginLeft: 4 }} onPress={() => router.replace(`/(adopter)/pet/${petId}`)}>
+          <Feather name="arrow-left" size={20} color={colors.text} />
+        </TouchableOpacity>
+      ),
+    })
+  }, [navigation, petId])
   const [submitting, setSubmitting] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [form, setForm] = useState({
     reason: '',
     experience: '',
@@ -22,6 +35,10 @@ export default function AdoptFormScreen() {
   })
 
   const update = (field: keyof typeof form) => (value: string) => setForm(prev => ({ ...prev, [field]: value }))
+
+  if (showSuccess) {
+    return <LottieSuccess message="Solicitud enviada correctamente" onFinish={() => router.back()} />
+  }
 
   const handleSubmit = async () => {
     if (!form.reason.trim()) {
@@ -40,8 +57,7 @@ export default function AdoptFormScreen() {
         form.additionalInfo && `Adicional: ${form.additionalInfo}`,
       ].filter(Boolean).join('\n')
       await createAdoptionRequestUseCase.execute(petId!, user!.id, shelterId!, message)
-      Alert.alert('Solicitud enviada', 'Tu solicitud de adopción ha sido enviada al refugio.')
-      router.back()
+      setShowSuccess(true)
     } catch (error: any) {
       Alert.alert('Error', error.message || 'No se pudo enviar la solicitud')
     } finally {

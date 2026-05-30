@@ -1,6 +1,6 @@
-import { Stack, Redirect } from 'expo-router'
+import { Tabs, Redirect } from 'expo-router'
 import { useAuthStore } from '../../src/presentation/store/authStore'
-import { TouchableOpacity, Text, StyleSheet } from 'react-native'
+import { TouchableOpacity, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../src/data/supabase/client'
 import { colors, borderRadius } from '../../src/presentation/theme'
@@ -18,30 +18,83 @@ export default function AdopterLayout() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    try { await supabase.auth.signOut() } catch {}
     logout()
     router.replace('/(auth)/login')
   }
 
+  const headerRight = () => (
+    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+      <Feather name="log-out" size={16} color="white" />
+    </TouchableOpacity>
+  )
+
   return (
-    <Stack
+    <Tabs
       screenOptions={{
         headerStyle: { backgroundColor: '#FFFFFF' },
-        headerRight: () => (
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Feather name="log-out" size={16} color="white" />
-          </TouchableOpacity>
-        ),
+        headerRight,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textLight,
+        tabBarStyle: { borderTopColor: colors.border, paddingBottom: 6, paddingTop: 6, height: 60 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
-      <Stack.Screen name="home" options={{ headerShown: false }} />
-      <Stack.Screen name="pet/[id]" options={{ title: 'Detalle' }} />
-      <Stack.Screen name="adopt-form" options={{ title: 'Solicitar Adopción', presentation: 'modal' }} />
-      <Stack.Screen name="my-requests" options={{ title: 'Mis Solicitudes' }} />
-      <Stack.Screen name="ai-chat" options={{ title: 'Asistente IA', headerRight: () => null }} />
-      <Stack.Screen name="map" options={{ headerShown: false }} />
-      <Stack.Screen name="chat/[requestId]" options={{ title: 'Chat' }} />
-    </Stack>
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Inicio',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="my-requests"
+        options={{
+          title: 'Mis Solicitudes',
+          tabBarIcon: ({ color, size }) => <Feather name="heart" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Mapa',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Feather name="map-pin" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="ai-chat"
+        options={{
+          title: 'Asistente',
+          tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
+          headerRight: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="pet/[id]"
+        options={{ href: null, headerShown: true, title: 'Detalle', headerRight }}
+      />
+      <Tabs.Screen
+        name="adopt-form"
+        options={{ href: null, headerShown: true, title: 'Solicitar Adopción', headerRight }}
+      />
+      <Tabs.Screen
+        name="chat/[requestId]"
+        options={{
+          href: null,
+          headerShown: true,
+          title: 'Chat',
+          headerRight,
+          headerLeft: () => (
+            <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(adopter)/my-requests')}>
+              <Feather name="arrow-left" size={20} color={colors.text} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+    </Tabs>
   )
 }
 
@@ -52,5 +105,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: borderRadius.sm,
     marginRight: 8,
+  },
+  backButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginLeft: 4,
   },
 })

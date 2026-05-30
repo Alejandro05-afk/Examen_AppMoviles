@@ -8,4 +8,10 @@ export interface AdoptionRequest {
   shelterResponse?: string
   createdAt: string
   updatedAt?: string
+  petName?: string
+  petPhoto?: string
+  adopterName?: string
+  adopterAvatar?: string
+  adopterPhone?: string
+  shelterName?: string
 }

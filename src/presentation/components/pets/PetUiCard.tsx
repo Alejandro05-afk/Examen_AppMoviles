@@ -14,17 +14,20 @@ interface PetUiCardProps {
   age?: string
   mainPhotoUrl?: string
   location?: string
+  onPress?: () => void
 }
 
-export const PetUiCard = ({ id, name, species, breed, age, mainPhotoUrl, location = 'Quito' }: PetUiCardProps) => {
+export const PetUiCard = ({ id, name, species, breed, age, mainPhotoUrl, location = 'Quito', onPress }: PetUiCardProps) => {
   const router = useRouter()
   const [liked, setLiked] = useState(false)
+
+  const handlePress = onPress ?? (() => router.push(`/(adopter)/pet/${id}`))
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
       style={styles.card}
-      onPress={() => router.push(`/(adopter)/pet/${id}`)}
+      onPress={handlePress}
     >
       <Image
         source={{ uri: mainPhotoUrl || 'https://placehold.co/400x500/e2e8f0/a1a1aa?text=Pet' }}

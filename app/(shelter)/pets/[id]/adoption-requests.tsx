@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams, router } from 'expo-router'
 import LottieView from 'lottie-react-native'
 import { useEffect, useState } from 'react'
 import { Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -106,21 +106,32 @@ export default function AdoptionRequestsScreen() {
             <Text style={styles.message}>{item.message}</Text>
           )}
 
-          {item.status === 'pending' && (
+          {(item.status === 'pending' || item.status === 'accepted') && (
             <View style={styles.actions}>
+              {item.status === 'pending' && (
+                <>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.acceptButton]}
+                    onPress={() => handleAccept(item.id)}
+                  >
+                    <Feather name="check" size={16} color="white" />
+                    <Text style={styles.acceptButtonText}>  Aceptar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.rejectButton]}
+                    onPress={() => handleReject(item.id)}
+                  >
+                    <Feather name="x" size={16} color="white" />
+                    <Text style={styles.rejectButtonText}>  Rechazar</Text>
+                  </TouchableOpacity>
+                </>
+              )}
               <TouchableOpacity
-                style={[styles.actionButton, styles.acceptButton]}
-                onPress={() => handleAccept(item.id)}
+                style={[styles.actionButton, styles.chatButton]}
+                onPress={() => router.push(`/(shelter)/chat/${item.id}`)}
               >
-                <Feather name="check" size={16} color="white" />
-                <Text style={styles.acceptButtonText}>  Aceptar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.rejectButton]}
-                onPress={() => handleReject(item.id)}
-              >
-                <Feather name="x" size={16} color="white" />
-                <Text style={styles.rejectButtonText}>  Rechazar</Text>
+                <Feather name="message-circle" size={16} color="white" />
+                <Text style={styles.chatButtonText}>  Chat</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -236,6 +247,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   rejectButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  chatButton: {
+    backgroundColor: colors.primary,
+  },
+  chatButtonText: {
     color: colors.white,
     fontSize: 14,
     fontWeight: 'bold',

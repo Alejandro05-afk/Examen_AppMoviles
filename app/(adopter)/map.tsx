@@ -19,7 +19,7 @@ export default function MapScreen() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    try { await supabase.auth.signOut() } catch {}
     logout()
     router.replace('/(auth)/login')
   }
@@ -81,8 +81,9 @@ export default function MapScreen() {
           <Feather name="log-out" size={22} color="#1A1A1A" />
         </TouchableOpacity>
       </View>
+      <View style={{ flex: 1 }}>
       <MapView
-        style={StyleSheet.absoluteFillObject}
+        style={{ flex: 1 }}
         initialRegion={{
           latitude: location.latitude,
           longitude: location.longitude,
@@ -109,6 +110,7 @@ export default function MapScreen() {
           />
         ))}
       </MapView>
+      </View>
       {shelters.length === 0 && !error && (
         <View style={styles.emptyOverlay}>
           <Text style={styles.emptyText}>No se encontraron refugios cercanos</Text>

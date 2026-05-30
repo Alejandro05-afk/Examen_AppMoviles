@@ -1,7 +1,8 @@
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import LottieView from 'lottie-react-native'
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { supabase } from '../../../src/data/supabase/client'
 import { useAuthStore } from '../../../src/presentation/store/authStore'
 import { colors, borderRadius, shadows, typography } from '../../../src/presentation/theme'
@@ -38,7 +39,7 @@ export default function PetDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <LottieView source={require('../../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
       </View>
     )
   }

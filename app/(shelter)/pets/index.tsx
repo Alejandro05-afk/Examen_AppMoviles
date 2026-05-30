@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router'
+import LottieView from 'lottie-react-native'
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { PetUiCard } from '../../../src/presentation/components/pets/PetUiCard'
 import { usePets } from '../../../src/presentation/hooks/usePets'
 import { useAuthStore } from '../../../src/presentation/store/authStore'
@@ -40,7 +41,7 @@ export default function ShelterPetsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <LottieView source={require('../../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
       </View>
     )
   }
@@ -63,27 +64,31 @@ export default function ShelterPetsScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <PetUiCard
+            id={item.id}
+            name={item.name}
+            species={item.species}
+            breed={item.breed}
+            age={
+              item.ageYears > 0
+                ? `${item.ageYears} ${item.ageYears === 1 ? 'año' : 'años'}`
+                : item.ageMonths > 0
+                ? `${item.ageMonths} ${item.ageMonths === 1 ? 'mes' : 'meses'}`
+                : undefined
+            }
+            mainPhotoUrl={item.mainPhotoUrl}
+            location="Mi refugio"
             onPress={() => router.push(`/(shelter)/pets/${item.id}/edit`)}
-          >
-            <PetUiCard
-              id={item.id}
-              name={item.name}
-              species={item.species}
-              breed={item.breed}
-              age={
-                item.ageYears > 0
-                  ? `${item.ageYears} ${item.ageYears === 1 ? 'año' : 'años'}`
-                  : item.ageMonths > 0
-                  ? `${item.ageMonths} ${item.ageMonths === 1 ? 'mes' : 'meses'}`
-                  : undefined
-              }
-              mainPhotoUrl={item.mainPhotoUrl}
-              location="Mi refugio"
-            />
-          </TouchableOpacity>
+          />
         )}
       />
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push('/(shelter)/pets/create')}
+        activeOpacity={0.8}
+      >
+        <Feather name="plus" size={28} color="white" />
+      </TouchableOpacity>
     </View>
   )
 }
@@ -118,5 +123,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textLight,
     textAlign: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
 })

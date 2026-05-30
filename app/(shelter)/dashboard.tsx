@@ -1,5 +1,5 @@
 import * as Location from 'expo-location'
-import { Link, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
@@ -44,7 +44,7 @@ export default function ShelterDashboard() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    try { await supabase.auth.signOut() } catch {}
     logout()
     router.replace('/(auth)/login')
   }
@@ -92,51 +92,33 @@ export default function ShelterDashboard() {
       </View>
 
       <View style={styles.statsRow}>
-        <Link href="/(shelter)/pets" asChild>
-          <TouchableOpacity style={styles.statCard}>
-            <View style={styles.statContent}>
-              <Feather name="users" size={28} color={colors.primary} />
-              <Text style={styles.statNumber}>{shelterPets.length}</Text>
-              <Text style={styles.statLabel}>Mascotas</Text>
-            </View>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(shelter)/requests" asChild>
-          <TouchableOpacity style={styles.statCard}>
-            <View style={styles.statContent}>
-              <Feather name="file-text" size={28} color={colors.primary} />
-              <Text style={styles.statNumber}>{requestCount}</Text>
-              <Text style={styles.statLabel}>Solicitudes</Text>
-            </View>
-          </TouchableOpacity>
-        </Link>
+        <View style={styles.statCard}>
+          <View style={styles.statContent}>
+            <Feather name="users" size={28} color={colors.primary} />
+            <Text style={styles.statNumber}>{shelterPets.length}</Text>
+            <Text style={styles.statLabel}>Mascotas</Text>
+          </View>
+        </View>
+        <View style={styles.statCard}>
+          <View style={styles.statContent}>
+            <Feather name="file-text" size={28} color={colors.primary} />
+            <Text style={styles.statNumber}>{requestCount}</Text>
+            <Text style={styles.statLabel}>Solicitudes</Text>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.actions}>
-        <Link href="/(shelter)/pets" asChild>
-          <TouchableOpacity style={styles.button}>
-            <Feather name="list" size={18} color="white" />
-            <Text style={styles.buttonText}>  Gestionar Mascotas</Text>
-          </TouchableOpacity>
-        </Link>
-        <Link href="/(shelter)/pets/create" asChild>
-          <TouchableOpacity style={[styles.button, styles.buttonOutlined]}>
-            <Feather name="plus-circle" size={18} color={colors.primary} />
-            <Text style={[styles.buttonText, styles.buttonTextOutlined]}>  Agregar Nueva Mascota</Text>
-          </TouchableOpacity>
-        </Link>
-        <TouchableOpacity
-          style={[styles.button, styles.buttonOutlined, savingLocation && styles.buttonDisabled]}
-          onPress={handleSaveLocation}
-          disabled={savingLocation}
-        >
-          {savingLocation ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : (
-            <><Feather name="map-pin" size={18} color={colors.primary} /><Text style={[styles.buttonText, styles.buttonTextOutlined]}>  Guardar mi ubicación</Text></>
-          )}
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[styles.buttonOutlined, savingLocation && styles.buttonDisabled]}
+        onPress={handleSaveLocation}
+        disabled={savingLocation}
+      >
+        {savingLocation ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <><Feather name="map-pin" size={18} color={colors.primary} /><Text style={[styles.buttonText, styles.buttonTextOutlined]}>  Guardar mi ubicación</Text></>
+        )}
+      </TouchableOpacity>
     </View>
   )
 }
@@ -195,26 +177,18 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     textTransform: 'uppercase',
   },
-  actions: {
-    gap: 8,
-    marginTop: 8,
-  },
-  button: {
-    flexDirection: 'row',
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    ...shadows.button,
-  },
   buttonOutlined: {
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.primary,
     shadowOpacity: 0,
     elevation: 0,
+    flexDirection: 'row',
+    paddingVertical: 16,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   buttonDisabled: {
     opacity: 0.5,

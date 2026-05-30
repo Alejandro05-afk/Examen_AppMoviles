@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import LottieView from 'lottie-react-native'
+import { router } from 'expo-router'
 import { getAdoptionRequestsUseCase } from '../../src/di/container'
 import { AdoptionRequestCard } from '../../src/presentation/components/adoption/AdoptionRequestCard'
 import { useAuthStore } from '../../src/presentation/store/authStore'
@@ -14,8 +16,8 @@ export default function MyRequestsScreen() {
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchRequests = async () => {
-    if (!user) return
     try {
+      if (!user) return
       const data = await getAdoptionRequestsUseCase.executeByAdopter(user.id)
       setRequests(data)
     } catch (error: any) {
@@ -30,6 +32,10 @@ export default function MyRequestsScreen() {
     fetchRequests()
   }, [user])
 
+  const handleChat = (requestId: string) => {
+    router.push(`/(adopter)/chat/${requestId}`)
+  }
+
   const onRefresh = () => {
     setRefreshing(true)
     fetchRequests()
@@ -38,7 +44,7 @@ export default function MyRequestsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <LottieView source={require('../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
       </View>
     )
   }
@@ -62,11 +68,13 @@ export default function MyRequestsScreen() {
         }
         renderItem={({ item }) => (
           <AdoptionRequestCard
-            fullName={item.shelters?.name || 'Refugio'}
-            avatarUrl={item.shelters?.avatar_url}
-            message={item.reason}
+            requestId={item.id}
+            fullName={item.shelterName || 'Refugio'}
+            petName={item.petName}
+            message={item.message}
             status={item.status}
-            createdAt={item.created_at}
+            createdAt={item.createdAt}
+            onChat={handleChat}
           />
         )}
       />

@@ -1,17 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native'
 import { Link } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import LottieView from 'lottie-react-native'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
 import { colors, borderRadius, shadows } from '../../src/presentation/theme'
 import Feather from '@expo/vector-icons/Feather'
-import Ionicons from '@expo/vector-icons/Ionicons'
 
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const animRef = useRef<LottieView>(null)
+
+  useEffect(() => {
+    animRef.current?.play()
+  }, [])
 
   const handleLogin = async () => {
     if (!email || !password) return Alert.alert('Error', 'Completa todos los campos')
@@ -40,7 +45,13 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <Ionicons name="paw" size={48} color={colors.primary} />
+        <LottieView
+          ref={animRef}
+          source={require('../../assets/lottie/paw-animation.json')}
+          loop
+          resizeMode="contain"
+            style={{ width: 80, height: 80 }}
+        />
         <Text style={styles.title}>PetAdopt</Text>
         <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
       </View>
@@ -111,7 +122,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
     marginBottom: 16,
   },
   title: {
