@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Markdown from 'react-native-markdown-display'
 import LottieView from 'lottie-react-native'
 import { sendAIMessageUseCase } from '../../src/di/container'
@@ -9,6 +10,7 @@ import { colors } from '../../src/presentation/theme'
 interface Message { id: string; role: 'user' | 'assistant'; text: string }
 
 export default function AIChatScreen() {
+  const insets = useSafeAreaInsets()
   const [messages, setMessages] = useState<Message[]>([
     { id: '0', role: 'assistant', text: '¡Hola! 🐾 Soy el asistente de PetAdopt. ¿Tienes dudas sobre el cuidado de tu futura mascota?' }
   ])
@@ -41,7 +43,7 @@ export default function AIChatScreen() {
   return (
     <KeyboardAvoidingView
       behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : Platform.OS === 'android' ? 80 : 0}
       style={{ flex: 1 }}
     >
       <View style={{ flex: 1, backgroundColor: isDark ? '#000' : '#fff' }}>
@@ -82,7 +84,9 @@ export default function AIChatScreen() {
 
         <View style={{
           flexDirection: 'row',
-          padding: 12,
+          paddingHorizontal: 12,
+          paddingTop: 12,
+          paddingBottom: 12 + insets.bottom,
           gap: 8,
           borderTopWidth: 1,
           borderTopColor: isDark ? '#333' : '#e0e0e0',

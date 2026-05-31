@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { supabase } from '../../../../src/data/supabase/client'
-import { deletePetUseCase, updatePetUseCase } from '../../../../src/di/container'
+import { usePets } from '../../../../src/presentation/hooks/usePets'
 import { PetForm, PetFormData } from '../../../../src/presentation/components/pets/PetForm'
 import { colors, borderRadius } from '../../../../src/presentation/theme'
 import Feather from '@expo/vector-icons/Feather'
@@ -10,6 +10,7 @@ import Feather from '@expo/vector-icons/Feather'
 export default function EditPetScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams()
+  const { updatePet, deletePet } = usePets()
   const [initialData, setInitialData] = useState<any>(null)
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function EditPetScreen() {
   }
 
   const handleSubmit = async (form: PetFormData, photoUri?: string) => {
-    await updatePetUseCase.execute(id as string, {
+    await updatePet(id as string, {
       name: form.name,
       species: form.species,
       breed: form.breed,
@@ -58,7 +59,7 @@ export default function EditPetScreen() {
     Alert.alert('Eliminar', '¿Eliminar esta mascota?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Eliminar', style: 'destructive', onPress: async () => {
-        await deletePetUseCase.execute(id as string)
+        await deletePet(id as string)
         router.back()
       }}
     ])

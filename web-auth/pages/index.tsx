@@ -28,7 +28,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (view === 'forward' && appUrl) {
-      window.location.replace(appUrl)
+      // Usamos setTimeout para salir del ciclo de React y href (no replace)
+      // para que sea equivalente al redirect post-selección de rol
+      setTimeout(() => { window.location.href = appUrl }, 100)
     }
   }, [view, appUrl])
 
@@ -169,7 +171,6 @@ export default function HomePage() {
   return (
     <div style={styles.page}>
       <p style={styles.redirecting}>Redirigiendo a PetAdopt...</p>
-      {appUrl && <a href={appUrl} style={styles.linkFallback}>Abrir PetAdopt</a>}
     </div>
   )
 }
@@ -265,16 +266,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#4A90E2',
     textDecoration: 'underline',
     fontWeight: 600,
-  },
-  linkFallback: {
-    display: 'inline-block',
-    padding: '12px 24px',
-    background: 'rgba(255,255,255,0.95)',
-    color: '#4A90E2',
-    borderRadius: 12,
-    textDecoration: 'none',
-    fontWeight: 700,
-    fontSize: 15,
   },
   redirecting: {
     color: 'rgba(255,255,255,0.9)',

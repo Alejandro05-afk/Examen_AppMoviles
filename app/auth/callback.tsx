@@ -1,7 +1,6 @@
-import * as Linking from 'expo-linking'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import LottieView from 'lottie-react-native'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
 import { useAuthStore } from '../../src/presentation/store/authStore'
@@ -11,6 +10,7 @@ export default function AuthCallbackScreen() {
   const { completeOAuthSessionFromUrl } = useAuth()
   const { isAuthenticated, user } = useAuthStore()
   const [error, setError] = useState<string | null>(null)
+  const params = useLocalSearchParams<{ access_token?: string; refresh_token?: string }>()
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -18,39 +18,37 @@ export default function AuthCallbackScreen() {
       return
     }
 
-    let mounted = true
+    let timeout: ReturnType<typeof setTimeout> | null = null
+    const showError = (msg: string) => {
+      if (timeout) clearTimeout(timeout)
+      setError(msg)
+    }
 
-    const timeout = setTimeout(() => {
-      if (!mounted) return
-      setError('El inicio de sesión tardó demasiado. Intenta de nuevo.')
+    timeout = setTimeout(() => {
+      showError('El inicio de sesión tardó demasiado. Intenta de nuevo.')
     }, 15000)
 
-    const handleUrl = async (url: string) => {
-      console.log('🔗 URL recibida:', url)
-      if (!mounted) return
+    const accessToken = params.access_token
+    const refreshToken = params.refresh_token
+
+    if (!accessToken || !refreshToken) {
+      showError('No se encontraron tokens en la URL')
+      return
+    }
+
+    ;(async () => {
       try {
-        const user = await completeOAuthSessionFromUrl(url)
-        if (!mounted || !user) return
-        router.replace(user.role === 'shelter' ? '/(shelter)/dashboard' : '/(adopter)/home')
+        const url = `petadopt://auth/callback?access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`
+        const u = await completeOAuthSessionFromUrl(url)
+        if (!u) { showError('No se pudo establecer la sesión'); return }
+        router.replace(u.role === 'shelter' ? '/(shelter)/dashboard' : '/(adopter)/home')
       } catch (e: any) {
-        if (mounted) setError(e.message ?? 'No se pudo completar el inicio de sesión')
+        showError(e.message ?? 'No se pudo completar el inicio de sesión')
       }
-    }
+    })()
 
-    const subscription = Linking.addEventListener('url', (event) => {
-      handleUrl(event.url)
-    })
-
-    Linking.getInitialURL().then((url) => {
-      if (url) handleUrl(url)
-    })
-
-    return () => {
-      mounted = false
-      clearTimeout(timeout)
-      subscription.remove()
-    }
-  }, [completeOAuthSessionFromUrl, isAuthenticated, user])
+    return () => { if (timeout) clearTimeout(timeout) }
+  }, [isAuthenticated, user, params.access_token, params.refresh_token])
 
   return (
     <View style={styles.container}>

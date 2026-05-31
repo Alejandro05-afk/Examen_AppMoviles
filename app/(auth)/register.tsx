@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native'
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
 import { colors, borderRadius, shadows } from '../../src/presentation/theme'
@@ -20,8 +20,13 @@ export default function RegisterScreen() {
     setLoading(true)
     try {
       await register(email, password, fullName, role)
+      router.replace('/(auth)/email-confirmation')
     } catch (e: any) {
-      Alert.alert('Error', e.message)
+      if (e.message === 'EMAIL_CONFIRMATION_REQUIRED') {
+        router.replace('/(auth)/email-confirmation')
+      } else {
+        Alert.alert('Error', e.message)
+      }
     } finally {
       setLoading(false)
     }

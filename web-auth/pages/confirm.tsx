@@ -27,8 +27,18 @@ export default function ConfirmPage() {
   }, [router.query.return_url])
 
   useEffect(() => {
+    const returnUrlParam = getQueryValue(router.query.return_url)
     const tokenHash = getQueryValue(router.query.token_hash)
     const type = getQueryValue(router.query.type)
+
+    if (returnUrlParam) {
+      setStatus('success')
+      setTimeout(() => {
+        window.location.href = returnUrl
+      }, 1000)
+      return
+    }
+
     if (!tokenHash || !type) return
 
     getSupabase().auth.verifyOtp({
@@ -53,7 +63,6 @@ export default function ConfirmPage() {
         <>
           <h1>Cuenta confirmada</h1>
           <p>Redirigiendo a la aplicacion...</p>
-          <a href={returnUrl} style={styles.button}>Volver a PetAdopt</a>
         </>
       )}
       {status === 'error' && <p>El enlace es invalido o expiro.</p>}
@@ -72,14 +81,5 @@ const styles = {
     padding: 24,
     fontFamily: 'sans-serif',
     textAlign: 'center' as const,
-  },
-  button: {
-    display: 'inline-block',
-    padding: '12px 18px',
-    background: '#6C63FF',
-    color: '#fff',
-    borderRadius: 8,
-    textDecoration: 'none',
-    fontWeight: 700,
   },
 }

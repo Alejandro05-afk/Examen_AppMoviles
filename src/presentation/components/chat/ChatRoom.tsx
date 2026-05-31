@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Feather from '@expo/vector-icons/Feather'
 import { supabase } from '../../../data/supabase/client'
 import { SupabaseChatRepository } from '../../../data/repositories/SupabaseChatRepository'
@@ -37,6 +38,7 @@ function formatTime(dateStr: string): string {
 }
 
 export default function ChatRoom({ requestId, userId }: Props) {
+  const insets = useSafeAreaInsets()
   const [messages, setMessages] = useState<ChatMessageData[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
@@ -78,11 +80,11 @@ export default function ChatRoom({ requestId, userId }: Props) {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      style={styles.container}
-    >
+      <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : Platform.OS === 'android' ? 80 : 0}
+          style={styles.container}
+        >
       <FlatList
         ref={flatRef}
         data={messages}
@@ -117,7 +119,7 @@ export default function ChatRoom({ requestId, userId }: Props) {
         }}
       />
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { paddingBottom: spacing.md + insets.bottom }]}>
         <TextInput
           style={styles.input}
           value={input}
@@ -224,7 +226,8 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
     gap: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: colors.border,

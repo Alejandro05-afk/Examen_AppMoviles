@@ -1,5 +1,4 @@
 import Feather from '@expo/vector-icons/Feather'
-import { useRouter } from 'expo-router'
 import LottieView from 'lottie-react-native'
 import { useEffect, useState } from 'react'
 import { FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
@@ -11,7 +10,6 @@ import { supabase } from '../../src/data/supabase/client'
 import { useAuthStore } from '../../src/presentation/store/authStore'
 
 export default function HomeScreen() {
-  const router = useRouter()
   const { availablePets, fetchAvailablePets } = usePets()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -21,7 +19,6 @@ export default function HomeScreen() {
   const handleLogout = async () => {
     try { await supabase.auth.signOut() } catch {}
     logout()
-    router.replace('/(auth)/login')
   }
 
   useEffect(() => {

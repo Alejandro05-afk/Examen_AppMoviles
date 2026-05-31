@@ -8,21 +8,12 @@ import { StatusBar } from 'expo-status-bar'
 import { colors, borderRadius } from '../../src/presentation/theme'
 import { useRouter } from 'expo-router'
 import Feather from '@expo/vector-icons/Feather'
-import { supabase } from '../../src/data/supabase/client'
-import { useAuthStore } from '../../src/presentation/store/authStore'
 
 const OSM_TILE_PROXY = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/osm-tiles/{z}/{x}/{y}.png`
 
 export default function MapScreen() {
   const router = useRouter()
-  const { logout } = useAuthStore()
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
-
-  const handleLogout = async () => {
-    try { await supabase.auth.signOut() } catch {}
-    logout()
-    router.replace('/(auth)/login')
-  }
   const [shelters, setShelters] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,13 +64,11 @@ export default function MapScreen() {
     <View style={{ flex: 1 }}>
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color="#1A1A1A" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Refugios Cercanos</Text>
-        <TouchableOpacity onPress={handleLogout}>
-          <Feather name="log-out" size={22} color="#1A1A1A" />
-        </TouchableOpacity>
+        <View style={styles.backButton} />
       </View>
       <View style={{ flex: 1 }}>
       <MapView
@@ -130,7 +119,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 52,
+    paddingBottom: 12,
     backgroundColor: colors.card,
     zIndex: 1,
   },
@@ -138,6 +128,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.text,
+  },
+  backButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   centered: {
     flex: 1,

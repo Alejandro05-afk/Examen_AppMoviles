@@ -46,6 +46,13 @@ export default function RootLayout() {
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        if (!session.user.email_confirmed_at) {
+          supabase.auth.signOut().catch(() => {})
+          setUser(null)
+          setLoading(false)
+          clearTimeout(authTimeout)
+          return
+        }
         authRepo.getCurrentUser().then((user) => {
           if (user) {
             setUser(user)
@@ -74,12 +81,20 @@ export default function RootLayout() {
 
   const checkUser = async () => {
     try {
-      const currentUser = await authRepo.getCurrentUser()
-      if (currentUser) {
-        setUser(currentUser)
-        if (currentUser.role === 'shelter') {
-          const shelterId = await getOrCreateShelterForUser(currentUser)
-          setShelterId(shelterId)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user && !user.email_confirmed_at) {
+        await supabase.auth.signOut()
+        setUser(null)
+        return
+      }
+      if (user) {
+        const currentUser = await authRepo.getCurrentUser()
+        if (currentUser) {
+          setUser(currentUser)
+          if (currentUser.role === 'shelter') {
+            const shelterId = await getOrCreateShelterForUser(currentUser)
+            setShelterId(shelterId)
+          }
         }
       }
     } catch {

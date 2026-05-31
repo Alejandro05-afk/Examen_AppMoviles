@@ -1,5 +1,4 @@
 import * as Location from 'expo-location'
-import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
@@ -13,7 +12,6 @@ import Feather from '@expo/vector-icons/Feather'
 
 export default function ShelterDashboard() {
   const { user, setShelterId, logout } = useAuthStore()
-  const router = useRouter()
   const { shelterPets, fetchShelterPets } = usePets()
   const [requestCount, setRequestCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -46,7 +44,6 @@ export default function ShelterDashboard() {
   const handleLogout = async () => {
     try { await supabase.auth.signOut() } catch {}
     logout()
-    router.replace('/(auth)/login')
   }
 
   const handleSaveLocation = async () => {

@@ -63,6 +63,10 @@ export class SupabaseAuthRepository implements IAuthRepository {
   async login(email: string, password: string): Promise<User> {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw new Error(error.message)
+    if (!data.user?.email_confirmed_at) {
+      await supabase.auth.signOut()
+      throw new Error('Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.')
+    }
     return this.mapToUser(data.user!)
   }
 
@@ -76,7 +80,8 @@ export class SupabaseAuthRepository implements IAuthRepository {
       },
     })
     if (error) throw new Error(error.message)
-    return this.mapToUser(data.user!)
+    await supabase.auth.signOut()
+    throw new Error('EMAIL_CONFIRMATION_REQUIRED')
   }
 
   async loginWithGoogle(): Promise<User> {
@@ -103,7 +108,19 @@ export class SupabaseAuthRepository implements IAuthRepository {
     return user
   }
 
+  private oauthPromise: Promise<User | null> | null = null
+
   async completeOAuthSessionFromUrl(url: string): Promise<User | null> {
+    if (this.oauthPromise) {
+      console.log('⏭️ OAuth ya en progreso, reusando promesa')
+      return this.oauthPromise
+    }
+    this.oauthPromise = this._doCompleteOAuthSessionFromUrl(url)
+      .finally(() => { this.oauthPromise = null })
+    return this.oauthPromise
+  }
+
+  private async _doCompleteOAuthSessionFromUrl(url: string): Promise<User | null> {
     console.log('🔍 completeOAuthSessionFromUrl - URL:', url)
     const params = getParamsFromUrl(url)
     console.log('📋 Parámetros extraídos:', Object.fromEntries(params.entries()))
