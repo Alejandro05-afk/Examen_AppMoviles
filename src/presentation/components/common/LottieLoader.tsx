@@ -1,28 +1,18 @@
 import LottieView from 'lottie-react-native'
-import { StyleSheet, Text, View } from 'react-native'
-import { colors } from '../../theme'
+import { useWindowDimensions } from 'react-native'
+import { YStack, Text } from 'tamagui'
 
 interface Props { message?: string }
 
-export const LottieLoader = ({ message = 'Cargando...' }: Props) => (
-  <View style={styles.container}>
-    <LottieView
-      source={require('../../../../assets/lottie/loading.json')}
-      autoPlay loop style={{ width: 120, height: 120 }}
-    />
-    <Text style={styles.message}>{message}</Text>
-  </View>
-)
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  message: {
-    marginTop: 8,
-    color: colors.textLight,
-    fontSize: 14,
-  },
-})
+export const LottieLoader = ({ message = 'Cargando...' }: Props) => {
+  const { width: screenWidth } = useWindowDimensions()
+  return (
+    <YStack flex={1} alignItems="center" justifyContent="center">
+      <LottieView
+        source={require('../../../../assets/lottie/loading.json')}
+        autoPlay loop style={{ width: screenWidth * 0.3, height: screenWidth * 0.3 }}
+      />
+      <Text marginTop="$2" color="$bark" fontSize={screenWidth > 400 ? 14 : 12}>{message}</Text>
+    </YStack>
+  )
+}

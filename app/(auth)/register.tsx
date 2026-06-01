@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Alert, Pressable, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native'
+import { Alert, ActivityIndicator } from 'react-native'
 import { Link, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
-import { colors, borderRadius, shadows } from '../../src/presentation/theme'
+import { YStack, XStack, Text, Button, Input, H2 } from 'tamagui'
 import Feather from '@expo/vector-icons/Feather'
+import { colors } from '../../src/presentation/theme'
 
 export default function RegisterScreen() {
   const { register } = useAuth()
@@ -17,6 +18,7 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!fullName || !email || !password) return Alert.alert('Error', 'Completa todos los campos')
     if (password.length < 6) return Alert.alert('Error', 'La contrasena debe tener al menos 6 caracteres')
+    if (!/\S+@\S+\.\S+/.test(email)) return Alert.alert('Error', 'Ingresa un email válido')
     setLoading(true)
     try {
       await register(email, password, fullName, role)
@@ -33,65 +35,105 @@ export default function RegisterScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <YStack flex={1} padding="$6" justifyContent="center" backgroundColor="$cream" gap="$4">
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <Feather name="user-plus" size={40} color={colors.primary} />
-        <Text style={styles.title}>Crear cuenta</Text>
-      </View>
+      <YStack alignItems="center" gap="$2" marginBottom="$4">
+        <Feather name="user-plus" size={40} color={colors.coral} />
+        <H2 textAlign="center" color="$chocolate">Crear cuenta</H2>
+      </YStack>
 
-      <View style={styles.inputContainer}>
-        <Feather name="user" size={18} color={colors.textLight} style={styles.inputIcon} />
-        <TextInput placeholder="Nombre completo" value={fullName} onChangeText={setFullName} style={styles.input} placeholderTextColor={colors.textLight} />
-      </View>
-      <View style={styles.inputContainer}>
-        <Feather name="mail" size={18} color={colors.textLight} style={styles.inputIcon} />
-        <TextInput placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" style={styles.input} placeholderTextColor={colors.textLight} />
-      </View>
-      <View style={styles.inputContainer}>
-        <Feather name="lock" size={18} color={colors.textLight} style={styles.inputIcon} />
-        <TextInput placeholder="Contraseña (min. 6 caracteres)" value={password} onChangeText={setPassword} secureTextEntry style={styles.input} placeholderTextColor={colors.textLight} />
-      </View>
+      <XStack alignItems="center" backgroundColor="$white" borderWidth={1} borderColor="$border" borderRadius="$md" paddingHorizontal="$3">
+        <Feather name="user" size={18} color={colors.bark} style={{ marginRight: 10 }} />
+        <Input
+          flex={1}
+          placeholder="Nombre completo"
+          value={fullName}
+          onChangeText={v => setFullName(v.replace(/[0-9]/g, ''))}
+          borderWidth={0}
+          backgroundColor="transparent"
+          placeholderTextColor="$bark"
+          fontSize="$6"
+          paddingVertical={12}
+        />
+      </XStack>
+      <XStack alignItems="center" backgroundColor="$white" borderWidth={1} borderColor="$border" borderRadius="$md" paddingHorizontal="$3">
+        <Feather name="mail" size={18} color={colors.bark} style={{ marginRight: 10 }} />
+        <Input
+          flex={1}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          borderWidth={0}
+          backgroundColor="transparent"
+          placeholderTextColor="$bark"
+          fontSize="$6"
+          paddingVertical={12}
+        />
+      </XStack>
+      <XStack alignItems="center" backgroundColor="$white" borderWidth={1} borderColor="$border" borderRadius="$md" paddingHorizontal="$3">
+        <Feather name="lock" size={18} color={colors.bark} style={{ marginRight: 10 }} />
+        <Input
+          flex={1}
+          placeholder="Contraseña (min. 6 caracteres)"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          borderWidth={0}
+          backgroundColor="transparent"
+          placeholderTextColor="$bark"
+          fontSize="$6"
+          paddingVertical={12}
+        />
+      </XStack>
 
-      <View style={styles.segmentRow}>
-        <Pressable onPress={() => setRole('adopter')} style={[styles.segment, role === 'adopter' && styles.segmentActive]}>
-          <Feather name="heart" size={16} color={role === 'adopter' ? 'white' : colors.text} />
-          <Text style={[styles.segmentText, role === 'adopter' && styles.segmentTextActive]}>  Adoptante</Text>
-        </Pressable>
-        <Pressable onPress={() => setRole('shelter')} style={[styles.segment, role === 'shelter' && styles.segmentActive]}>
-          <Feather name="home" size={16} color={role === 'shelter' ? 'white' : colors.text} />
-          <Text style={[styles.segmentText, role === 'shelter' && styles.segmentTextActive]}>  Refugio</Text>
-        </Pressable>
-      </View>
+      <XStack gap="$3">
+        <Button
+          flex={1}
+          backgroundColor={role === 'adopter' ? '$coral' : '$white'}
+          borderWidth={1}
+          borderColor={role === 'adopter' ? '$coral' : '$border'}
+          borderRadius="$md"
+          pressStyle={{ backgroundColor: role === 'adopter' ? '$coralDeep' : '$sand' }}
+          onPress={() => setRole('adopter')}
+          icon={<Feather name="heart" size={16} color={role === 'adopter' ? 'white' : colors.chocolate} />}
+        >
+          <Text fontWeight="700" color={role === 'adopter' ? 'white' : '$chocolate'}>  Adoptante</Text>
+        </Button>
+        <Button
+          flex={1}
+          backgroundColor={role === 'shelter' ? '$coral' : '$white'}
+          borderWidth={1}
+          borderColor={role === 'shelter' ? '$coral' : '$border'}
+          borderRadius="$md"
+          pressStyle={{ backgroundColor: role === 'shelter' ? '$coralDeep' : '$sand' }}
+          onPress={() => setRole('shelter')}
+          icon={<Feather name="home" size={16} color={role === 'shelter' ? 'white' : colors.chocolate} />}
+        >
+          <Text fontWeight="700" color={role === 'shelter' ? 'white' : '$chocolate'}>  Refugio</Text>
+        </Button>
+      </XStack>
 
-      <Pressable style={[styles.button, loading && styles.buttonDisabled]} onPress={handleRegister} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <><Feather name="check" size={18} color="white" /><Text style={styles.buttonText}>  Crear cuenta</Text></>}
-      </Pressable>
+      <Button
+        backgroundColor="$coral"
+        borderRadius="$md"
+        pressStyle={{ backgroundColor: '$coralDeep' }}
+        disabled={loading}
+        opacity={loading ? 0.7 : 1}
+        onPress={handleRegister}
+        icon={loading ? undefined : <Feather name="check" size={18} color="white" />}
+      >
+        {loading ? <ActivityIndicator color="white" /> : '  Crear cuenta'}
+      </Button>
 
       <Link href="/(auth)/login" asChild>
-        <Pressable style={styles.loginLink}>
-          <Text style={styles.inlineLink}>¿Ya tienes cuenta? Inicia sesión</Text>
-        </Pressable>
+        <Button backgroundColor="transparent" borderWidth={0} pressStyle={{ opacity: 0.7 }}>
+          <Text textAlign="center" color="$coral" fontWeight="600" fontSize={14}>
+            ¿Ya tienes cuenta? Inicia sesión
+          </Text>
+        </Button>
       </Link>
-    </View>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: colors.background, gap: 14 },
-  header: { alignItems: 'center', gap: 8, marginBottom: 8 },
-  title: { fontSize: 30, fontWeight: '800', textAlign: 'center', color: colors.text },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: borderRadius.md, paddingHorizontal: 14 },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, paddingVertical: 12, fontSize: 16, color: colors.text },
-  segmentRow: { flexDirection: 'row', gap: 12 },
-  segment: { flex: 1, flexDirection: 'row', borderWidth: 1, borderColor: colors.border, borderRadius: borderRadius.md, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card },
-  segmentActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  segmentText: { fontWeight: '700', color: colors.text },
-  segmentTextActive: { color: colors.white },
-  button: { backgroundColor: colors.primary, borderRadius: borderRadius.md, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', ...shadows.button },
-  buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  loginLink: { marginTop: 8 },
-  inlineLink: { textAlign: 'center', color: colors.primary, fontWeight: '600', fontSize: 14 },
-})

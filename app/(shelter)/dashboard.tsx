@@ -1,21 +1,34 @@
 import * as Location from 'expo-location'
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Alert, FlatList, RefreshControl, TouchableOpacity, useWindowDimensions } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { supabase } from '../../src/data/supabase/client'
 import { getOrCreateShelterForUser } from '../../src/data/supabase/shelterHelpers'
 import { shelterRepo } from '../../src/di/container'
 import { usePets } from '../../src/presentation/hooks/usePets'
 import { useAuthStore } from '../../src/presentation/store/authStore'
-import { colors, borderRadius, shadows, typography } from '../../src/presentation/theme'
+import { PetUiCard } from '../../src/presentation/components/pets/PetUiCard'
+import { YStack, XStack, Text, Card } from 'tamagui'
 import Feather from '@expo/vector-icons/Feather'
+import { colors } from '../../src/presentation/theme'
+import { useRouter } from 'expo-router'
+import LottieView from 'lottie-react-native'
 
 export default function ShelterDashboard() {
+  const router = useRouter()
   const { user, setShelterId, logout } = useAuthStore()
   const { shelterPets, fetchShelterPets } = usePets()
   const [requestCount, setRequestCount] = useState(0)
-  const [loading, setLoading] = useState(true)
   const [savingLocation, setSavingLocation] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const insets = useSafeAreaInsets()
+  const { width: screenWidth } = useWindowDimensions()
+  const isSmall = screenWidth < 380
+  const statIconSize = screenWidth > 400 ? 28 : 24
+  const statFontSize = screenWidth > 400 ? 28 : 24
+  const fabSize = screenWidth > 400 ? 60 : 52
+  const fabIconSize = screenWidth > 400 ? 28 : 22
 
   useEffect(() => {
     loadData()
@@ -36,9 +49,17 @@ export default function ShelterDashboard() {
       setRequestCount(count ?? 0)
     } catch (e) {
       console.error(e)
-    } finally {
-      setLoading(false)
     }
+  }
+
+  const onRefresh = async () => {
+    if (!user) return
+    setRefreshing(true)
+    try {
+      const shelterId = await getOrCreateShelterForUser(user)
+      await fetchShelterPets(shelterId)
+    } catch {}
+    setRefreshing(false)
   }
 
   const handleLogout = async () => {
@@ -68,134 +89,133 @@ export default function ShelterDashboard() {
     }
   }
 
-  return (
-    <View style={styles.container}>
+  const headerContent = (
+    <YStack gap="$4" paddingBottom="$4">
       <StatusBar style="dark" />
-      <View style={styles.welcomeCard}>
-        <View style={styles.welcomeContent}>
-          <Feather name="home" size={24} color="white" />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.welcomeText}>
+      <Card backgroundColor="$coral" padding={isSmall ? '$4' : '$5'} borderRadius="$lg" borderWidth={0}>
+        <XStack alignItems="center" gap="$3">
+          <Feather name="home" size={isSmall ? 20 : 24} color="white" />
+          <YStack flex={1}>
+            <Text color="white" fontWeight="700" fontSize={isSmall ? 18 : 22}>
               Bienvenido, {user?.fullName?.split(' ')[0] ?? 'Refugio'}
             </Text>
-            <Text style={styles.welcomeSubtext}>
+            <Text color="rgba(255,255,255,0.8)" fontSize={isSmall ? 12 : 13} marginTop={2}>
               Panel de administración de tu refugio
             </Text>
-          </View>
+          </YStack>
           <TouchableOpacity onPress={handleLogout}>
-            <Feather name="log-out" size={22} color="white" />
+            <Feather name="log-out" size={isSmall ? 20 : 22} color="white" />
           </TouchableOpacity>
-        </View>
-      </View>
+        </XStack>
+      </Card>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <View style={styles.statContent}>
-            <Feather name="users" size={28} color={colors.primary} />
-            <Text style={styles.statNumber}>{shelterPets.length}</Text>
-            <Text style={styles.statLabel}>Mascotas</Text>
-          </View>
-        </View>
-        <View style={styles.statCard}>
-          <View style={styles.statContent}>
-            <Feather name="file-text" size={28} color={colors.primary} />
-            <Text style={styles.statNumber}>{requestCount}</Text>
-            <Text style={styles.statLabel}>Solicitudes</Text>
-          </View>
-        </View>
-      </View>
+      <XStack gap="$3">
+        <Card flex={1} backgroundColor="$white" padding={isSmall ? '$4' : '$5'} borderRadius="$lg" borderWidth={1} borderColor="$border">
+          <YStack alignItems="center" gap="$2.5">
+            <Feather name="users" size={statIconSize} color={colors.coral} />
+            <Text fontWeight="700" fontSize={statFontSize} color="$chocolate">{shelterPets.length}</Text>
+            <Text fontWeight="600" fontSize={isSmall ? 10 : 11} color="$bark" textTransform="uppercase">Mascotas</Text>
+          </YStack>
+        </Card>
+        <Card flex={1} backgroundColor="$white" padding={isSmall ? '$4' : '$5'} borderRadius="$lg" borderWidth={1} borderColor="$border">
+          <YStack alignItems="center" gap="$2.5">
+            <Feather name="file-text" size={statIconSize} color={colors.coral} />
+            <Text fontWeight="700" fontSize={statFontSize} color="$chocolate">{requestCount}</Text>
+            <Text fontWeight="600" fontSize={isSmall ? 10 : 11} color="$bark" textTransform="uppercase">Solicitudes</Text>
+          </YStack>
+        </Card>
+      </XStack>
 
       <TouchableOpacity
-        style={[styles.buttonOutlined, savingLocation && styles.buttonDisabled]}
-        onPress={handleSaveLocation}
         disabled={savingLocation}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          borderWidth: 1,
+          borderColor: '#FF6B6B',
+          borderRadius: 30,
+          backgroundColor: '#FFFFFF',
+          paddingVertical: 16,
+          opacity: savingLocation ? 0.5 : 1,
+        }}
+        onPress={handleSaveLocation}
       >
         {savingLocation ? (
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={colors.coral} />
         ) : (
-          <><Feather name="map-pin" size={18} color={colors.primary} /><Text style={[styles.buttonText, styles.buttonTextOutlined]}>  Guardar mi ubicación</Text></>
+          <><Feather name="map-pin" size={18} color={colors.coral} /><Text fontWeight="700" color="$coral" fontSize={isSmall ? 14 : 16}>  Guardar mi ubicación</Text></>
         )}
       </TouchableOpacity>
-    </View>
+
+      <Text fontSize={isSmall ? 18 : 20} fontWeight="700" color="$chocolate">Mis Mascotas</Text>
+    </YStack>
+  )
+
+  return (
+    <YStack flex={1} backgroundColor="$cream" paddingTop={insets.top + 8}>
+      <FlatList
+        data={shelterPets}
+        keyExtractor={p => p.id}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        ListHeaderComponent={headerContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.coral} />
+        }
+        ListEmptyComponent={
+          <YStack alignItems="center" justifyContent="center" marginTop={40} gap="$4">
+            <LottieView source={require('../../assets/lottie/empty-pets.json')} autoPlay loop style={{ width: screenWidth * 0.35, height: screenWidth * 0.35 }} />
+            <Text fontSize="$7" fontWeight="bold" color="$chocolate">No tienes mascotas registradas</Text>
+            <Text fontSize="$4" color="$bark" textAlign="center" paddingHorizontal="$4">
+              Agrega tu primera mascota para empezar a recibir solicitudes de adopción
+            </Text>
+          </YStack>
+        }
+        renderItem={({ item }) => (
+          <YStack marginBottom="$4">
+            <PetUiCard
+              id={item.id}
+              name={item.name}
+              species={item.species}
+              breed={item.breed}
+              age={
+                item.ageYears > 0
+                  ? `${item.ageYears} ${item.ageYears === 1 ? 'año' : 'años'}`
+                  : item.ageMonths > 0
+                  ? `${item.ageMonths} ${item.ageMonths === 1 ? 'mes' : 'meses'}`
+                  : undefined
+              }
+              mainPhotoUrl={item.mainPhotoUrl}
+              location="Mi refugio"
+              onPress={() => router.push(`/(shelter)/pets/${item.id}/edit`)}
+              screenWidth={screenWidth}
+            />
+          </YStack>
+        )}
+      />
+      <TouchableOpacity
+        style={{
+          position: 'absolute',
+          right: 20,
+          bottom: 20,
+          width: fabSize,
+          height: fabSize,
+          borderRadius: fabSize / 2,
+          backgroundColor: colors.coral,
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 6,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+        }}
+        onPress={() => router.push('/(shelter)/pets/create')}
+        activeOpacity={0.8}
+      >
+        <Feather name="plus" size={fabIconSize} color="white" />
+      </TouchableOpacity>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    gap: 16,
-    backgroundColor: colors.background,
-    paddingTop: 52,
-  },
-  welcomeCard: {
-    backgroundColor: colors.primary,
-    padding: 20,
-    borderRadius: borderRadius.lg,
-    ...shadows.card,
-  },
-  welcomeContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  welcomeText: {
-    color: 'white',
-    ...typography.h2,
-  },
-  welcomeSubtext: {
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 2,
-    ...typography.small,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.card,
-    padding: 20,
-    borderRadius: borderRadius.lg,
-    ...shadows.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statContent: {
-    alignItems: 'center',
-    gap: 10,
-  },
-  statNumber: {
-    ...typography.h1,
-    color: colors.text,
-  },
-  statLabel: {
-    ...typography.label,
-    color: colors.textLight,
-    textTransform: 'uppercase',
-  },
-  buttonOutlined: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    shadowOpacity: 0,
-    elevation: 0,
-    flexDirection: 'row',
-    paddingVertical: 16,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  buttonTextOutlined: {
-    color: colors.primary,
-  },
-})

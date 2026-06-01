@@ -4,6 +4,8 @@ import { AdoptionRequest } from '../../domain/entities/AdoptionRequest'
 
 type SupabaseAdoptionRequest = Record<string, any>
 
+const functionUrl = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-push`
+
 const toDomain = (raw: SupabaseAdoptionRequest): AdoptionRequest => ({
   id: raw.id,
   petId: raw.pet_id,
@@ -34,37 +36,16 @@ export class SupabaseAdoptionRepository implements IAdoptionRepository {
 
     if (error) throw new Error(error.message)
 
-    await this.notifyShelterNewRequest(shelterId, data)
-    return toDomain(data!)
-  }
-
-  private async notifyShelterNewRequest(shelterId: string, requestData: any): Promise<void> {
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('push_token')
-        .eq('id', shelterId)
-        .single()
-
-      if (!profile?.push_token) return
-
-      const petName = requestData.pets?.name ?? 'una mascota'
-      const adopterName = requestData.profiles?.full_name ?? 'Un adoptante'
-
-      const functionUrl = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-push`
-
       await fetch(functionUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: profile.push_token,
-          title: '📩 Nueva solicitud de adopción',
-          body: `${adopterName} quiere adoptar a ${petName}`,
-        }),
+        body: JSON.stringify({ action: 'adoption_request', requestId: data!.id }),
       })
     } catch {
       // Silently fail
     }
+    return toDomain(data!)
   }
 
   async getRequestsByAdopter(adopterId: string): Promise<AdoptionRequest[]> {
@@ -124,42 +105,14 @@ export class SupabaseAdoptionRepository implements IAdoptionRepository {
       }
     }
 
-    await this.sendPushNotification(requestId, status)
-  }
-
-  private async sendPushNotification(requestId: string, status: 'accepted' | 'rejected'): Promise<void> {
     try {
-      const { data: requestData } = await supabase
-        .from('adoption_requests')
-        .select('adopter_id, pets(name)')
-        .eq('id', requestId)
-        .single()
-
-      if (!requestData) return
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('push_token')
-        .eq('id', requestData.adopter_id)
-        .single()
-
-      if (!profile?.push_token) return
-
-      const petName = (requestData.pets as any)?.name ?? 'una mascota'
-      const title = status === 'accepted' ? '✅ Solicitud aceptada' : '❌ Solicitud rechazada'
-      const body = status === 'accepted'
-        ? `¡Felicitaciones! Tu solicitud para adoptar a ${petName} ha sido aprobada.`
-        : `Tu solicitud para adoptar a ${petName} no fue aprobada en esta ocasión.`
-
-      const functionUrl = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-push`
-
       await fetch(functionUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: profile.push_token, title, body }),
+        body: JSON.stringify({ action: 'status_update', requestId, status }),
       })
     } catch {
-      // Silently fail - push notification is best-effort
+      // Silently fail
     }
   }
 }

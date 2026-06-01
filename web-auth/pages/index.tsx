@@ -15,7 +15,6 @@ export default function HomePage() {
     const tokens = getTokensFromHash()
     const params = new URLSearchParams(window.location.search)
     const returnUrl = params.get('return_url') ?? 'petadopt://auth/callback'
-    // Pasamos tokens como query params (el hash se pierde en Intents de Android)
     const qp = new URLSearchParams()
     if (tokens.accessToken) qp.set('access_token', tokens.accessToken)
     if (tokens.refreshToken) qp.set('refresh_token', tokens.refreshToken)
@@ -28,8 +27,6 @@ export default function HomePage() {
 
   useEffect(() => {
     if (view === 'forward' && appUrl) {
-      // Usamos setTimeout para salir del ciclo de React y href (no replace)
-      // para que sea equivalente al redirect post-selección de rol
       setTimeout(() => { window.location.href = appUrl }, 100)
     }
   }, [view, appUrl])
@@ -82,14 +79,12 @@ export default function HomePage() {
       const fullName = meta.full_name ?? meta.name ?? ''
       const avatarUrl = meta.avatar_url ?? meta.picture ?? null
 
-      // Update user_metadata so future logins detect the role
       await fetch(`${supabaseUrl}/auth/v1/user`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({ data: { ...meta, role } }),
       })
 
-      // Upsert profile in database
       const profileRes = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
         method: 'POST',
         headers: {
@@ -106,7 +101,6 @@ export default function HomePage() {
       })
       if (!profileRes.ok) throw new Error('Error al guardar el perfil')
 
-      // Create shelter record if needed
       if (role === 'shelter') {
         const shelterRes = await fetch(`${supabaseUrl}/rest/v1/shelters`, {
           method: 'POST',
@@ -122,7 +116,6 @@ export default function HomePage() {
         if (!shelterRes.ok) throw new Error('Error al crear el refugio')
       }
 
-      // Pequeña espera para que el navegador procese las peticiones
       await new Promise(r => setTimeout(r, 500))
       window.location.href = appUrl
     } catch (e: any) {
@@ -136,7 +129,12 @@ export default function HomePage() {
       <div style={styles.page}>
         {error && <p style={styles.error}>{error}</p>}
         <div style={styles.card}>
-          <div style={styles.logo}>🐾</div>
+          <div style={styles.logo}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="4" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="20" cy="14" r="2"/><circle cx="4" cy="14" r="2"/><circle cx="7" cy="7" r="2"/>
+              <path d="M11 10c-2.5 0-4.5 1.8-5 4h10c-.5-2.2-2.5-4-5-4z"/>
+            </svg>
+          </div>
           <h1 style={styles.title}>PetAdopt</h1>
           <p style={styles.subtitle}>¿Qué tipo de cuenta deseas crear?</p>
           <div style={styles.buttons}>
@@ -145,7 +143,12 @@ export default function HomePage() {
               onClick={() => selectRole('shelter')}
               disabled={saving}
             >
-              <span style={styles.btnIcon}>🏠</span>
+              <span style={styles.btnIcon}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+              </span>
               <span style={styles.btnLabel}>Soy un Refugio</span>
               <span style={styles.btnDesc}>Publica mascotas y recibe solicitudes de adopción</span>
             </button>
@@ -154,7 +157,11 @@ export default function HomePage() {
               onClick={() => selectRole('adopter')}
               disabled={saving}
             >
-              <span style={styles.btnIcon}>❤️</span>
+              <span style={styles.btnIcon}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                </svg>
+              </span>
               <span style={styles.btnLabel}>Soy un Adoptante</span>
               <span style={styles.btnDesc}>Busca mascotas y envía solicitudes de adopción</span>
             </button>
@@ -184,7 +191,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     padding: 24,
     fontFamily: 'system-ui, -apple-system, sans-serif',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #FF6B6B 0%, #FFB347 100%)',
     textAlign: 'center',
     gap: 16,
   },
@@ -193,12 +200,12 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: 16,
-    background: 'white',
+    background: '#FFF8F0',
     borderRadius: 20,
     padding: '40px 32px',
     width: '100%',
     maxWidth: 400,
-    boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+    boxShadow: '0 20px 60px rgba(61,35,20,0.15)',
   },
   logo: {
     fontSize: 48,
@@ -207,12 +214,12 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: 28,
     fontWeight: 800,
-    color: '#2D3748',
+    color: '#3D2314',
     margin: 0,
   },
   subtitle: {
     fontSize: 15,
-    color: '#718096',
+    color: '#8B6F47',
     margin: 0,
   },
   buttons: {
@@ -236,14 +243,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'inherit',
   },
   btnShelter: {
-    background: '#EBF4FF',
-    borderColor: '#4A90E2',
-    color: '#2B6CB0',
+    background: '#FFF3E0',
+    borderColor: '#FFB347',
+    color: '#8B6F47',
   },
   btnAdopter: {
-    background: '#FFF5F5',
-    borderColor: '#FF6584',
-    color: '#C53030',
+    background: '#FFE8E8',
+    borderColor: '#FF6B6B',
+    color: '#E85555',
   },
   btnIcon: {
     fontSize: 32,
@@ -258,12 +265,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   footer: {
     fontSize: 13,
-    color: '#A0AEC0',
+    color: '#8B6F47',
     margin: 0,
     marginTop: 8,
   },
   link: {
-    color: '#4A90E2',
+    color: '#FF6B6B',
     textDecoration: 'underline',
     fontWeight: 600,
   },
@@ -273,8 +280,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   error: {
-    color: '#FC8181',
-    background: '#FFF5F5',
+    color: '#E85555',
+    background: '#FFE8E8',
     padding: '12px 20px',
     borderRadius: 10,
     fontSize: 14,

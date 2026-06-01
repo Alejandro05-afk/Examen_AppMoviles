@@ -15,3 +15,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/osm-tiles/deno.json"
 entrypoint = "./functions/osm-tiles/index.ts"
+
+[functions.send-push]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-push/deno.json"
+entrypoint = "./functions/send-push/index.ts"

@@ -5,11 +5,9 @@ import { createClient } from '@supabase/supabase-js'
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
-
   return createClient(supabaseUrl, supabaseAnonKey)
 }
 
@@ -58,28 +56,57 @@ export default function ConfirmPage() {
 
   return (
     <div style={styles.container}>
-      {status === 'loading' && <p>Verificando tu cuenta...</p>}
+      {status === 'loading' && <p style={styles.text}>Verificando tu cuenta...</p>}
       {status === 'success' && (
         <>
-          <h1>Cuenta confirmada</h1>
-          <p>Redirigiendo a la aplicacion...</p>
+          <div>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <h1 style={styles.title}>Cuenta confirmada</h1>
+          <p style={styles.text}>Redirigiendo a la aplicación...</p>
         </>
       )}
-      {status === 'error' && <p>El enlace es invalido o expiro.</p>}
+      {status === 'error' && (
+        <>
+          <div>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FFB347" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <p style={styles.text}>El enlace es inválido o expiró.</p>
+        </>
+      )}
     </div>
   )
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
-    flexDirection: 'column' as const,
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '100vh',
-    gap: 12,
+    gap: 16,
     padding: 24,
-    fontFamily: 'sans-serif',
-    textAlign: 'center' as const,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    textAlign: 'center',
+    background: 'linear-gradient(135deg, #FF6B6B 0%, #FFB347 100%)',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 800,
+    color: '#FFF8F0',
+    margin: 0,
+  },
+  text: {
+    fontSize: 16,
+    color: 'rgba(255,248,240,0.9)',
+    margin: 0,
   },
 }

@@ -5,11 +5,9 @@ import { createClient } from '@supabase/supabase-js'
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
-
   return createClient(supabaseUrl, supabaseAnonKey)
 }
 
@@ -43,7 +41,7 @@ export default function ResetPasswordPage() {
   }, [router.query])
 
   const handleSubmit = async () => {
-    if (password !== confirm) return alert('Las contrasenas no coinciden')
+    if (password !== confirm) return alert('Las contraseñas no coinciden')
     setStatus('loading')
 
     const { error } = await getSupabase().auth.updateUser({ password })
@@ -51,87 +49,118 @@ export default function ResetPasswordPage() {
       setStatus('error')
     } else {
       setStatus('success')
-      setTimeout(() => {
-        window.location.href = returnUrl
-      }, 1000)
     }
   }
 
   if (!sessionReady) {
-    return <div style={styles.container}><p>Validando enlace...</p></div>
+    return (
+      <div style={styles.container}>
+        <p style={styles.text}>Validando enlace...</p>
+      </div>
+    )
   }
 
   return (
-    <div style={styles.formContainer}>
-      <h2>Nueva contrasena</h2>
-      {status === 'form' || status === 'loading' ? (
-        <>
-          <input
-            type="password"
-            placeholder="Nueva contrasena"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            style={styles.input}
-          />
-          <input
-            type="password"
-            placeholder="Confirmar contrasena"
-            value={confirm}
-            onChange={e => setConfirm(e.target.value)}
-            style={styles.input}
-          />
-          <button onClick={handleSubmit} disabled={status === 'loading'} style={styles.button}>
-            {status === 'loading' ? 'Guardando...' : 'Actualizar contrasena'}
-          </button>
-        </>
-      ) : status === 'success' ? (
-        <>
-          <p>Contrasena actualizada. Volviendo a la app...</p>
-          <a href={returnUrl} style={styles.linkButton}>Volver a PetAdopt</a>
-        </>
-      ) : (
-        <p>Error al actualizar. Intenta de nuevo.</p>
-      )}
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>Nueva contraseña</h2>
+        {status === 'form' || status === 'loading' ? (
+          <div style={styles.form}>
+            <input
+              type="password"
+              placeholder="Nueva contraseña"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              style={styles.input}
+            />
+            <input
+              type="password"
+              placeholder="Confirmar contraseña"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              style={styles.input}
+            />
+            <button onClick={handleSubmit} disabled={status === 'loading'} style={styles.button}>
+              {status === 'loading' ? 'Guardando...' : 'Actualizar contraseña'}
+            </button>
+          </div>
+        ) : status === 'success' ? (
+          <p style={styles.text}>Contraseña actualizada correctamente. Ahora puedes iniciar sesión en la app con tu nueva contraseña.</p>
+        ) : (
+          <p style={styles.text}>Error al actualizar. Intenta de nuevo.</p>
+        )}
+      </div>
     </div>
   )
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
-    minHeight: '100vh',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    fontFamily: 'sans-serif',
-  },
-  formContainer: {
-    maxWidth: 400,
-    margin: '80px auto',
+    minHeight: '100vh',
     padding: 24,
-    fontFamily: 'sans-serif',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    background: 'linear-gradient(135deg, #FF6B6B 0%, #FFB347 100%)',
+  },
+  card: {
+    background: '#FFF8F0',
+    borderRadius: 20,
+    padding: '40px 32px',
+    width: '100%',
+    maxWidth: 400,
+    boxShadow: '0 20px 60px rgba(61,35,20,0.15)',
+    textAlign: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 800,
+    color: '#3D2314',
+    margin: 0,
+    marginBottom: 20,
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
   },
   input: {
     display: 'block',
     width: '100%',
-    padding: 10,
-    marginBottom: 12,
+    padding: 14,
     fontSize: 16,
+    border: '2px solid #E8ECF0',
+    borderRadius: 12,
+    fontFamily: 'inherit',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
   },
   button: {
-    padding: '12px 24px',
-    background: '#6C63FF',
+    padding: '14px 24px',
+    background: '#FF6B6B',
     color: '#fff',
     border: 'none',
-    borderRadius: 8,
+    borderRadius: 12,
     cursor: 'pointer',
+    fontSize: 16,
+    fontWeight: 700,
+    fontFamily: 'inherit',
   },
   linkButton: {
     display: 'inline-block',
     padding: '12px 18px',
-    background: '#6C63FF',
+    background: '#FF6B6B',
     color: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
     textDecoration: 'none',
     fontWeight: 700,
+    marginTop: 12,
+  },
+  text: {
+    fontSize: 15,
+    color: '#8B6F47',
+    margin: 0,
   },
 }

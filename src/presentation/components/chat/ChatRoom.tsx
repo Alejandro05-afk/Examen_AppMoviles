@@ -4,18 +4,16 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
-  View,
+  useWindowDimensions,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { YStack, XStack, Text } from 'tamagui'
 import Feather from '@expo/vector-icons/Feather'
 import { supabase } from '../../../data/supabase/client'
 import { SupabaseChatRepository } from '../../../data/repositories/SupabaseChatRepository'
 import { ChatMessageData } from '../../../domain/repositories/IChatRepository'
-import { colors, borderRadius, spacing } from '../../theme'
 
 const chatRepo = new SupabaseChatRepository()
 
@@ -39,6 +37,7 @@ function formatTime(dateStr: string): string {
 
 export default function ChatRoom({ requestId, userId }: Props) {
   const insets = useSafeAreaInsets()
+  const { width: screenWidth } = useWindowDimensions()
   const [messages, setMessages] = useState<ChatMessageData[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
@@ -73,186 +72,107 @@ export default function ChatRoom({ requestId, userId }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$cream">
+        <ActivityIndicator size="large" color="#FF6B6B" />
+      </YStack>
     )
   }
 
   return (
-      <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : Platform.OS === 'android' ? 80 : 0}
-          style={styles.container}
-        >
+    <KeyboardAvoidingView
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : Platform.OS === 'android' ? 80 : 0}
+      style={{ flex: 1 }}
+    >
       <FlatList
         ref={flatRef}
         data={messages}
         keyExtractor={m => m.id}
         onContentSizeChange={() => flatRef.current?.scrollToEnd({ animated: true })}
-        contentContainerStyle={styles.messagesContainer}
-        style={styles.list}
+        contentContainerStyle={{ padding: 20, flexGrow: 1, gap: 12 }}
+        style={{ flex: 1 }}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Feather name="message-circle" size={48} color={colors.textLight} />
-            <Text style={styles.emptyTitle}>Sin mensajes aún</Text>
-            <Text style={styles.emptySub}>Envía el primer mensaje para coordinar la visita</Text>
-          </View>
+          <YStack flex={1} alignItems="center" justifyContent="center" gap="$2" paddingVertical={80}>
+            <Feather name="message-circle" size={48} color="#8B6F47" />
+            <Text fontSize={16} fontWeight="600" color="$chocolate">Sin mensajes aún</Text>
+            <Text fontSize={13} color="$bark" textAlign="center">Envía el primer mensaje para coordinar la visita</Text>
+          </YStack>
         }
         renderItem={({ item }) => {
           const isMe = item.sender_id === userId
           return (
-            <View style={[styles.row, isMe && styles.rowRight]}>
-              <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}>
+            <XStack justifyContent={isMe ? 'flex-end' : 'flex-start'}>
+              <YStack
+                maxWidth="80%"
+                paddingHorizontal="$3.5"
+                paddingVertical="$2.5"
+                borderRadius="$lg"
+                backgroundColor={isMe ? '$coral' : 'white'}
+                borderWidth={isMe ? 0 : 1}
+                borderColor={isMe ? 'transparent' : '#E8E0D6'}
+                borderBottomRightRadius={isMe ? 2 : 16}
+                borderBottomLeftRadius={isMe ? 16 : 2}
+                gap="$1"
+              >
                 {item.profiles && !isMe && (
-                  <Text style={styles.senderName}>{item.profiles.full_name}</Text>
+                  <Text fontSize={12} fontWeight="700" color="$coral" marginBottom="$1">{item.profiles.full_name}</Text>
                 )}
-                <Text style={[styles.messageText, isMe && styles.messageTextMe]}>
+                <Text fontSize={15} color={isMe ? 'white' : '$chocolate'} lineHeight={20}>
                   {item.content}
                 </Text>
-                <Text style={[styles.timestamp, isMe && styles.timestampMe]}>
+                <Text fontSize={11} color={isMe ? 'rgba(255,255,255,0.7)' : '$bark'} textAlign="right" marginTop="$1">
                   {formatTime(item.created_at)}
                 </Text>
-              </View>
-            </View>
+              </YStack>
+            </XStack>
           )
         }}
       />
 
-      <View style={[styles.inputContainer, { paddingBottom: spacing.md + insets.bottom }]}>
+      <XStack
+        paddingHorizontal="$3"
+        paddingTop="$3"
+        gap="$2"
+        borderTopWidth={1}
+        borderTopColor="#E8E0D6"
+        backgroundColor="white"
+        alignItems="flex-end"
+        paddingBottom={12 + insets.bottom}
+      >
         <TextInput
-          style={styles.input}
+          style={{
+            flex: 1,
+            backgroundColor: '#FFF8F0',
+            borderRadius: 12,
+            paddingHorizontal: screenWidth > 400 ? 20 : 14,
+            paddingVertical: screenWidth > 400 ? 12 : 10,
+            fontSize: screenWidth > 400 ? 14 : 13,
+            color: '#3D2314',
+            maxHeight: 100,
+          }}
           value={input}
           onChangeText={setInput}
           placeholder="Escribe un mensaje..."
-          placeholderTextColor={colors.textLight}
+          placeholderTextColor="#8B6F47"
           multiline
           maxLength={500}
         />
         <TouchableOpacity
-          style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
+          style={{
+            backgroundColor: '#FF6B6B',
+            width: screenWidth > 400 ? 44 : 38,
+            height: screenWidth > 400 ? 44 : 38,
+            borderRadius: screenWidth > 400 ? 22 : 19,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: !input.trim() || sending ? 0.5 : 1,
+          }}
           onPress={send}
           disabled={!input.trim() || sending}
         >
-          <Feather name="send" size={18} color="white" />
+          <Feather name="send" size={screenWidth > 400 ? 18 : 15} color="white" />
         </TouchableOpacity>
-      </View>
+      </XStack>
     </KeyboardAvoidingView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  list: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  messagesContainer: {
-    padding: spacing.lg,
-    gap: spacing.md,
-    flexGrow: 1,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-  },
-  rowRight: {
-    justifyContent: 'flex-end',
-  },
-  bubble: {
-    maxWidth: '80%',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: borderRadius.md,
-    gap: 2,
-  },
-  bubbleMe: {
-    backgroundColor: colors.primary,
-    borderBottomRightRadius: 2,
-  },
-  bubbleOther: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderBottomLeftRadius: 2,
-  },
-  senderName: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 2,
-  },
-  messageText: {
-    fontSize: 15,
-    color: colors.text,
-    lineHeight: 20,
-  },
-  messageTextMe: {
-    color: colors.white,
-  },
-  timestamp: {
-    fontSize: 11,
-    color: colors.textLight,
-    marginTop: 4,
-    textAlign: 'right',
-  },
-  timestampMe: {
-    color: 'rgba(255,255,255,0.7)',
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: 80,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  emptySub: {
-    fontSize: 13,
-    color: colors.textLight,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    gap: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.card,
-    alignItems: 'flex-end',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    fontSize: 14,
-    color: colors.text,
-    maxHeight: 100,
-  },
-  sendButton: {
-    backgroundColor: colors.primary,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
-  },
-})

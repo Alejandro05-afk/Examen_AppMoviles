@@ -1,7 +1,6 @@
-import { Tabs, Redirect } from 'expo-router'
+import { Tabs, Redirect, useRouter } from 'expo-router'
 import { useAuthStore } from '../../src/presentation/store/authStore'
-import { TouchableOpacity, StyleSheet } from 'react-native'
-import { useRouter } from 'expo-router'
+import { TouchableOpacity } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from '../../src/presentation/theme'
 import Feather from '@expo/vector-icons/Feather'
@@ -58,11 +57,21 @@ export default function AdopterLayout() {
           title: 'Asistente',
           tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
           headerRight: () => null,
+          tabBarHideOnKeyboard: true,
         }}
       />
       <Tabs.Screen
         name="pet/[id]"
-        options={{ href: null, headerShown: true, title: 'Detalle' }}
+        options={{
+          href: null,
+          headerShown: true,
+          title: 'Detalle',
+          headerLeft: () => (
+            <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 4, marginLeft: 4 }} onPress={() => router.replace('/(adopter)/home')}>
+              <Feather name="arrow-left" size={20} color={colors.text} />
+            </TouchableOpacity>
+          ),
+        }}
       />
       <Tabs.Screen
         name="adopt-form"
@@ -75,7 +84,7 @@ export default function AdopterLayout() {
           headerShown: true,
           title: 'Chat',
           headerLeft: () => (
-            <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(adopter)/my-requests')}>
+            <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 4, marginLeft: 4 }} onPress={() => router.replace('/(adopter)/my-requests')}>
               <Feather name="arrow-left" size={20} color={colors.text} />
             </TouchableOpacity>
           ),
@@ -84,11 +93,3 @@ export default function AdopterLayout() {
     </Tabs>
   )
 }
-
-const styles = StyleSheet.create({
-  backButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginLeft: 4,
-  },
-})

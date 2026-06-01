@@ -1,10 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, TouchableOpacity, useWindowDimensions } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../../../src/data/supabase/client'
 import { usePets } from '../../../../src/presentation/hooks/usePets'
+import { Pet } from '../../../../src/domain/entities/Pet'
 import { PetForm, PetFormData } from '../../../../src/presentation/components/pets/PetForm'
-import { colors, borderRadius } from '../../../../src/presentation/theme'
+import { YStack, Text } from 'tamagui'
 import Feather from '@expo/vector-icons/Feather'
 
 export default function EditPetScreen() {
@@ -12,6 +14,8 @@ export default function EditPetScreen() {
   const { id } = useLocalSearchParams()
   const { updatePet, deletePet } = usePets()
   const [initialData, setInitialData] = useState<any>(null)
+  const { width: screenWidth } = useWindowDimensions()
+  const insets = useSafeAreaInsets()
 
   useEffect(() => {
     loadPet()
@@ -40,16 +44,16 @@ export default function EditPetScreen() {
   const handleSubmit = async (form: PetFormData, photoUri?: string) => {
     await updatePet(id as string, {
       name: form.name,
-      species: form.species,
+      species: form.species as Pet['species'],
       breed: form.breed,
-      size: form.size,
-      gender: form.gender,
+      size: form.size as Pet['size'],
+      gender: form.gender as Pet['gender'],
       description: form.description,
       ageYears: parseInt(form.ageYears),
       isVaccinated: form.isVaccinated,
       isSterilized: form.isSterilized,
       isDewormed: form.isDewormed,
-      status: form.status,
+      status: form.status as Pet['status'],
     }, photoUri)
     Alert.alert('Actualizado', 'Mascota actualizada correctamente')
     router.back()
@@ -67,45 +71,27 @@ export default function EditPetScreen() {
 
   if (!initialData) return null
 
+  const deleteIconSize = screenWidth > 400 ? 18 : 16
+  const deleteFontSize = screenWidth > 400 ? 16 : 14
+  const deletePadding = screenWidth > 400 ? 16 : 12
+
   return (
-    <View style={styles.container}>
+    <YStack flex={1} backgroundColor="$cream" paddingBottom={insets.bottom}>
       <PetForm
         initialData={initialData}
         onSubmit={handleSubmit}
         submitLabel="Guardar Cambios"
         showStatus
       />
-      <View style={styles.deleteSection}>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Feather name="trash-2" size={18} color="white" />
-          <Text style={styles.deleteButtonText}>Eliminar Mascota</Text>
+      <YStack paddingHorizontal="$4" paddingTop={0}>
+        <TouchableOpacity
+          style={{ backgroundColor: '#E85555', paddingVertical: deletePadding, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+          onPress={handleDelete}
+        >
+          <Feather name="trash-2" size={deleteIconSize} color="white" />
+          <Text color="white" fontSize={deleteFontSize} fontWeight="bold">Eliminar Mascota</Text>
         </TouchableOpacity>
-      </View>
-    </View>
+      </YStack>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  deleteSection: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  deleteButton: {
-    backgroundColor: colors.alert,
-    paddingVertical: 16,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  deleteButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-})

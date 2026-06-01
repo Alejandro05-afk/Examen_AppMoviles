@@ -1,40 +1,22 @@
 import { useEffect } from 'react'
 import { router } from 'expo-router'
-import { StyleSheet, Text, View } from 'react-native'
-import { colors } from '../../src/presentation/theme'
-import Feather from '@expo/vector-icons/Feather'
+import LottieView from 'lottie-react-native'
+import { useWindowDimensions } from 'react-native'
+import { YStack, Text } from 'tamagui'
 
 export default function PasswordUpdatedScreen() {
+  const { width: screenWidth } = useWindowDimensions()
+
   useEffect(() => {
     const timeout = setTimeout(() => router.replace('/(auth)/login'), 1200)
     return () => clearTimeout(timeout)
   }, [])
 
   return (
-    <View style={styles.container}>
-      <Feather name="check-circle" size={64} color={colors.secondary} />
-      <Text style={styles.title}>Contraseña actualizada</Text>
-      <Text style={styles.subtitle}>Volviendo al inicio de sesión...</Text>
-    </View>
+    <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$6" backgroundColor="$cream">
+      <LottieView source={require('../../assets/lottie/success.json')} autoPlay loop={false} style={{ width: screenWidth * 0.3, height: screenWidth * 0.3 }} />
+      <Text fontSize={screenWidth > 400 ? 22 : 18} fontWeight="700" color="$chocolate">Contraseña actualizada</Text>
+      <Text fontSize={screenWidth > 400 ? 14 : 12} color="$bark">Volviendo al inicio de sesión...</Text>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    padding: 24,
-    backgroundColor: colors.background,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textLight,
-  },
-})

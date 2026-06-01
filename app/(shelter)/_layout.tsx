@@ -1,7 +1,6 @@
-import { Tabs, Redirect } from 'expo-router'
+import { Tabs, Redirect, useRouter } from 'expo-router'
 import { useAuthStore } from '../../src/presentation/store/authStore'
-import { TouchableOpacity, StyleSheet } from 'react-native'
-import { useRouter } from 'expo-router'
+import { TouchableOpacity } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from '../../src/presentation/theme'
 import Feather from '@expo/vector-icons/Feather'
@@ -45,10 +44,12 @@ export default function ShelterLayout() {
         }}
       />
       <Tabs.Screen
-        name="pets/index"
+        name="ai-chat"
         options={{
-          title: 'Mascotas',
-          tabBarIcon: ({ color, size }) => <Feather name="grid" size={size} color={color} />,
+          title: 'Asistente',
+          tabBarIcon: ({ color, size }) => <Feather name="message-circle" size={size} color={color} />,
+          headerRight: () => null,
+          tabBarHideOnKeyboard: true,
         }}
       />
       <Tabs.Screen
@@ -58,7 +59,7 @@ export default function ShelterLayout() {
           headerShown: true,
           title: 'Nueva Mascota',
           headerLeft: () => (
-            <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(shelter)/pets')}>
+            <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 4, marginLeft: 4 }} onPress={() => router.replace('/(shelter)/dashboard')}>
               <Feather name="arrow-left" size={20} color={colors.text} />
             </TouchableOpacity>
           ),
@@ -71,7 +72,7 @@ export default function ShelterLayout() {
           headerShown: true,
           title: 'Editar Mascota',
           headerLeft: () => (
-            <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(shelter)/pets')}>
+            <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 4, marginLeft: 4 }} onPress={() => router.replace('/(shelter)/dashboard')}>
               <Feather name="arrow-left" size={20} color={colors.text} />
             </TouchableOpacity>
           ),
@@ -88,7 +89,7 @@ export default function ShelterLayout() {
           headerShown: true,
           title: 'Chat',
           headerLeft: () => (
-            <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(shelter)/requests')}>
+            <TouchableOpacity style={{ paddingHorizontal: 8, paddingVertical: 4, marginLeft: 4 }} onPress={() => router.replace('/(shelter)/requests')}>
               <Feather name="arrow-left" size={20} color={colors.text} />
             </TouchableOpacity>
           ),
@@ -97,11 +98,3 @@ export default function ShelterLayout() {
     </Tabs>
   )
 }
-
-const styles = StyleSheet.create({
-  backButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginLeft: 4,
-  },
-})

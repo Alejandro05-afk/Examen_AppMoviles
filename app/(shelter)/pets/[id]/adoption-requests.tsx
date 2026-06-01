@@ -1,17 +1,19 @@
 import { useLocalSearchParams, router } from 'expo-router'
 import LottieView from 'lottie-react-native'
 import { useEffect, useState } from 'react'
-import { Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, FlatList, Image, TouchableOpacity, useWindowDimensions } from 'react-native'
 import { supabase } from '../../../../src/data/supabase/client'
 import { acceptAdoptionRequestUseCase, rejectAdoptionRequestUseCase } from '../../../../src/di/container'
-import { colors, borderRadius, shadows } from '../../../../src/presentation/theme'
 import { StatusBar } from 'expo-status-bar'
+import { YStack, XStack, Text } from 'tamagui'
 import Feather from '@expo/vector-icons/Feather'
 
 export default function AdoptionRequestsScreen() {
   const { id: petId } = useLocalSearchParams()
   const [requests, setRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const { width: screenWidth } = useWindowDimensions()
+  const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 
   const loadRequests = async () => {
     const { data } = await supabase
@@ -32,7 +34,8 @@ export default function AdoptionRequestsScreen() {
         text: 'Aceptar',
         onPress: async () => {
           await acceptAdoptionRequestUseCase.execute(requestId, '¡Felicitaciones! Tu solicitud ha sido aprobada.')
-          loadRequests()
+          setShowHeartAnimation(true)
+          setTimeout(() => { setShowHeartAnimation(false); loadRequests() }, 2000)
         }
       }
     ])
@@ -54,209 +57,98 @@ export default function AdoptionRequestsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <LottieView source={require('../../../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
-      </View>
+      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$cream">
+        <LottieView source={require('../../../../assets/lottie/loading.json')} autoPlay loop style={{ width: screenWidth * 0.3, height: screenWidth * 0.3 }} />
+      </YStack>
     )
   }
 
   if (requests.length === 0) {
     return (
-      <View style={styles.centered}>
-        <LottieView source={require('../../../../assets/lottie/empty-pets.json')} autoPlay loop style={{ width: 180, height: 180 }} />
-        <Text style={styles.emptyText}>No hay solicitudes aún</Text>
-      </View>
+      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$cream">
+        <LottieView source={require('../../../../assets/lottie/empty-pets.json')} autoPlay loop style={{ width: screenWidth * 0.4, height: screenWidth * 0.4 }} />
+        <Text fontSize={screenWidth > 400 ? 16 : 14} color="$bark" marginTop="$4">No hay solicitudes aún</Text>
+      </YStack>
     )
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <YStack flex={1}>
       <StatusBar style="dark" />
+      {showHeartAnimation && (
+        <YStack position="absolute" top={0} left={0} right={0} bottom={0} zIndex={100} backgroundColor="rgba(255,248,240,0.85)" alignItems="center" justifyContent="center">
+          <LottieView source={require('../../../../assets/lottie/heart.json')} autoPlay loop={false} style={{ width: screenWidth * 0.4, height: screenWidth * 0.4 }} />
+          <Text fontSize={18} fontWeight="bold" color="$chocolate" marginTop="$4">Solicitud aceptada</Text>
+        </YStack>
+      )}
       <FlatList
       data={requests}
       keyExtractor={r => r.id}
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={{ padding: 16, gap: 12 }}
       renderItem={({ item }) => (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.avatar}>
+        <YStack backgroundColor="white" padding="$4" borderRadius="$lg" gap="$3" elevation={2} shadowColor="#000" shadowOffset={{ width: 0, height: 1 }} shadowOpacity={0.1} shadowRadius={4}>
+          <XStack alignItems="center" gap="$3">
+            <YStack width={40} height={40} borderRadius={20} overflow="hidden">
               {item.profiles?.avatar_url ? (
-                <Image source={{ uri: item.profiles.avatar_url }} style={styles.avatarImage} />
+                <Image source={{ uri: item.profiles.avatar_url }} style={{ width: '100%', height: '100%' }} />
               ) : (
-                <View style={styles.avatarFallback}>
-                  <Text style={styles.avatarText}>{item.profiles?.full_name?.[0] ?? '?'}</Text>
-                </View>
+                <YStack width="100%" height="100%" backgroundColor="$sand" alignItems="center" justifyContent="center">
+                  <Text fontSize={16} fontWeight="bold" color="$bark">{item.profiles?.full_name?.[0] ?? '?'}</Text>
+                </YStack>
               )}
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>{item.profiles?.full_name}</Text>
-              <Text style={styles.userDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
-            </View>
-            <Text style={[
-              styles.status,
-              item.status === 'pending' && styles.statusPending,
-              item.status === 'accepted' && styles.statusAccepted,
-              item.status === 'rejected' && styles.statusRejected
-            ]}>
+            </YStack>
+            <YStack flex={1}>
+              <Text fontSize={16} fontWeight="bold" color="$chocolate">{item.profiles?.full_name}</Text>
+              <Text fontSize={12} color="$bark">{new Date(item.created_at).toLocaleDateString()}</Text>
+            </YStack>
+            <Text
+              fontSize={12}
+              fontWeight="bold"
+              color={
+                item.status === 'pending' ? '#F5A623' :
+                item.status === 'accepted' ? '#4CAF50' : '#E85555'
+              }
+            >
               {item.status === 'pending' ? 'Pendiente' : item.status === 'accepted' ? 'Aceptada' : 'Rechazada'}
             </Text>
-          </View>
+          </XStack>
 
           {item.message && (
-            <Text style={styles.message}>{item.message}</Text>
+            <Text fontSize={14} color="$bark">{item.message}</Text>
           )}
 
           {(item.status === 'pending' || item.status === 'accepted') && (
-            <View style={styles.actions}>
+            <XStack gap="$2" marginTop="$2">
               {item.status === 'pending' && (
                 <>
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.acceptButton]}
+                    style={{ flex: 1, flexDirection: 'row', paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4CAF50' }}
                     onPress={() => handleAccept(item.id)}
                   >
                     <Feather name="check" size={16} color="white" />
-                    <Text style={styles.acceptButtonText}>  Aceptar</Text>
+                    <Text color="white" fontSize={14} fontWeight="bold">  Aceptar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.rejectButton]}
+                    style={{ flex: 1, flexDirection: 'row', paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E85555' }}
                     onPress={() => handleReject(item.id)}
                   >
                     <Feather name="x" size={16} color="white" />
-                    <Text style={styles.rejectButtonText}>  Rechazar</Text>
+                    <Text color="white" fontSize={14} fontWeight="bold">  Rechazar</Text>
                   </TouchableOpacity>
                 </>
               )}
               <TouchableOpacity
-                style={[styles.actionButton, styles.chatButton]}
+                style={{ flex: 1, flexDirection: 'row', paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FF6B6B' }}
                 onPress={() => router.push(`/(shelter)/chat/${item.id}`)}
               >
                 <Feather name="message-circle" size={16} color="white" />
-                <Text style={styles.chatButtonText}>  Chat</Text>
+                <Text color="white" fontSize={14} fontWeight="bold">  Chat</Text>
               </TouchableOpacity>
-            </View>
+            </XStack>
           )}
-        </View>
+        </YStack>
       )}
     />
-    </View>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.textLight,
-    marginTop: 16,
-  },
-  listContent: {
-    padding: 16,
-    gap: 12,
-    backgroundColor: colors.background,
-  },
-  card: {
-    backgroundColor: colors.card,
-    padding: 16,
-    borderRadius: borderRadius.md,
-    ...shadows.card,
-    gap: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarFallback: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.textLight,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  userDate: {
-    fontSize: 12,
-    color: colors.textLight,
-  },
-  status: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  statusPending: {
-    color: '#F5A623',
-  },
-  statusAccepted: {
-    color: colors.secondary,
-  },
-  statusRejected: {
-    color: colors.alert,
-  },
-  message: {
-    fontSize: 14,
-    color: colors.textLight,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    paddingVertical: 12,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  acceptButton: {
-    backgroundColor: colors.secondary,
-  },
-  rejectButton: {
-    backgroundColor: colors.alert,
-  },
-  acceptButtonText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  rejectButtonText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  chatButton: {
-    backgroundColor: colors.primary,
-  },
-  chatButtonText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-})

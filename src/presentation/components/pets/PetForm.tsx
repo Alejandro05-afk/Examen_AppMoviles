@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ScrollView, Alert, Image, Pressable, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, View, Text } from 'react-native'
+import { ScrollView, Alert, Image, Pressable, TextInput, TouchableOpacity, ActivityIndicator, useWindowDimensions } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
-import { colors, borderRadius, shadows } from '../../theme'
+import { YStack, XStack, Text } from 'tamagui'
 import Feather from '@expo/vector-icons/Feather'
 
 export interface PetFormData {
@@ -26,8 +26,32 @@ interface Props {
   showStatus?: boolean
 }
 
+const inputBase = (fontSize: number) => ({
+  backgroundColor: 'white',
+  borderWidth: 1,
+  borderColor: '#E8E0D6',
+  borderRadius: 12,
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+  fontSize,
+  color: '#3D2314',
+})
+
 export const PetForm = ({ initialData, onSubmit, submitLabel = 'Guardar', loading: externalLoading, showStatus }: Props) => {
   const [internalLoading, setInternalLoading] = useState(false)
+  const { width: screenWidth } = useWindowDimensions()
+  const isLarge = screenWidth > 400
+  const inputFontSize = isLarge ? 16 : 14
+  const labelSize = isLarge ? 12 : 11
+  const optionSize = isLarge ? 14 : 12
+  const cameraIconSize = isLarge ? 24 : 20
+  const cameraTextSize = isLarge ? 16 : 14
+  const checkSize = isLarge ? 16 : 14
+  const checkTextSize = isLarge ? 14 : 12
+  const submitPadding = isLarge ? 16 : 14
+  const submitIconSize = isLarge ? 18 : 16
+  const submitFontSize = isLarge ? 16 : 14
+  const btnMinWidth = isLarge ? 60 : 50
   const loading = externalLoading ?? internalLoading
   const [photoUri, setPhotoUri] = useState<string | null>(null)
   const [form, setForm] = useState<PetFormData>({
@@ -54,6 +78,8 @@ export const PetForm = ({ initialData, onSubmit, submitLabel = 'Guardar', loadin
 
   const handleSubmit = async () => {
     if (!form.name) return Alert.alert('Error', 'Nombre es requerido')
+    const age = parseInt(form.ageYears, 10)
+    if (isNaN(age) || age < 0 || age > 30) return Alert.alert('Error', 'Edad inválida (0-30 años)')
     setInternalLoading(true)
     try {
       await onSubmit(form, photoUri ?? undefined)
@@ -64,252 +90,208 @@ export const PetForm = ({ initialData, onSubmit, submitLabel = 'Guardar', loadin
     }
   }
 
+  const btn = (active: boolean) => ({
+    backgroundColor: active ? '#FF6B6B' : '#FFF8F0',
+    paddingHorizontal: isLarge ? 12 : 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    minWidth: btnMinWidth,
+    flex: 1,
+    borderWidth: 0,
+  })
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
+    <ScrollView style={{ flex: 1 }}>
+      <YStack padding="$4" gap="$4">
         <Pressable onPress={pickImage}>
-          <View style={styles.photoContainer}>
+          <YStack
+            height={screenWidth * 0.5}
+            borderRadius="$lg"
+            backgroundColor="#E8E0D6"
+            alignItems="center"
+            justifyContent="center"
+            overflow="hidden"
+            borderWidth={2}
+            borderColor="#E8E0D6"
+            borderStyle="dashed"
+          >
             {photoUri
-              ? <Image source={{ uri: photoUri }} style={styles.photo} />
+              ? <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%' }} />
               : initialData?.mainPhotoUrl
-                ? <Image source={{ uri: initialData.mainPhotoUrl }} style={styles.photo} />
-                : <Text style={styles.photoPlaceholder}>📷 Toca para agregar foto</Text>
+                ? <Image source={{ uri: initialData.mainPhotoUrl }} style={{ width: '100%', height: '100%' }} />
+                : <><Feather name="camera" size={cameraIconSize} color="#8B6F47" /><Text color="$bark" fontSize={cameraTextSize}> Toca para agregar foto</Text></>
             }
-          </View>
+          </YStack>
         </Pressable>
 
         <TextInput
-          style={styles.input}
+          style={inputBase(inputFontSize)}
           placeholder="Nombre de la mascota"
           value={form.name}
-          onChangeText={v => setForm(p => ({ ...p, name: v }))}
+          onChangeText={v => setForm(p => ({ ...p, name: v.replace(/[0-9]/g, '') }))}
+          placeholderTextColor="#8B6F47"
         />
         <TextInput
-          style={styles.input}
+          style={inputBase(inputFontSize)}
           placeholder="Raza (opcional)"
           value={form.breed}
           onChangeText={v => setForm(p => ({ ...p, breed: v }))}
+          placeholderTextColor="#8B6F47"
         />
         <TextInput
-          style={[styles.input, styles.textArea]}
+          style={[inputBase(inputFontSize), { height: Math.min(80, screenWidth * 0.25), textAlignVertical: 'top' }]}
           placeholder="Descripción"
           value={form.description}
           onChangeText={v => setForm(p => ({ ...p, description: v }))}
           multiline
           numberOfLines={3}
+          placeholderTextColor="#8B6F47"
         />
         <TextInput
-          style={styles.input}
+          style={inputBase(inputFontSize)}
           placeholder="Edad (años)"
           value={form.ageYears}
-          onChangeText={v => setForm(p => ({ ...p, ageYears: v }))}
+          onChangeText={v => setForm(p => ({ ...p, ageYears: v.replace(/[^0-9]/g, '') }))}
           keyboardType="numeric"
+          placeholderTextColor="#8B6F47"
         />
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Especie</Text>
-          <View style={styles.buttonGroup}>
-            {['dog', 'cat', 'rabbit', 'bird', 'other'].map(s => (
-              <TouchableOpacity
-                key={s}
-                style={[styles.button, form.species === s && styles.buttonActive]}
-                onPress={() => setForm(p => ({ ...p, species: s }))}
-              >
-                <Text style={[styles.buttonText, form.species === s && styles.buttonTextActive]}>
-                  {s === 'dog' ? 'Perro' : s === 'cat' ? 'Gato' : s === 'rabbit' ? 'Conejo' : s === 'bird' ? 'Ave' : 'Otro'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        <YStack gap="$2">
+          <Text fontSize={labelSize} color="$bark" fontWeight="600">Especie</Text>
+          <YStack gap="$2">
+            <XStack gap="$2">
+              {(['dog', 'cat', 'rabbit'] as const).map(s => (
+                <TouchableOpacity
+                  key={s}
+                  style={btn(form.species === s)}
+                  onPress={() => setForm(p => ({ ...p, species: s }))}
+                >
+                  <Text style={{ color: form.species === s ? 'white' : '#3D2314', fontSize: optionSize }}>
+                    {s === 'dog' ? 'Perro' : s === 'cat' ? 'Gato' : 'Conejo'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </XStack>
+            <XStack gap="$2">
+              {(['bird', 'other'] as const).map(s => (
+                <TouchableOpacity
+                  key={s}
+                  style={btn(form.species === s)}
+                  onPress={() => setForm(p => ({ ...p, species: s }))}
+                >
+                  <Text style={{ color: form.species === s ? 'white' : '#3D2314', fontSize: optionSize }}>
+                    {s === 'bird' ? 'Ave' : 'Otro'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </XStack>
+          </YStack>
+        </YStack>
 
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>Tamaño</Text>
-            <View style={styles.buttonGroup}>
+        <XStack gap="$4">
+          <YStack flex={1} gap="$2">
+            <Text fontSize={labelSize} color="$bark" fontWeight="600">Tamaño</Text>
+            <XStack gap="$2">
               {['small', 'medium', 'large'].map(s => (
                 <TouchableOpacity
                   key={s}
-                  style={[styles.button, form.size === s && styles.buttonActive]}
+                  style={btn(form.size === s)}
                   onPress={() => setForm(p => ({ ...p, size: s }))}
                 >
-                  <Text style={[styles.buttonText, form.size === s && styles.buttonTextActive]}>
+                  <Text style={{ color: form.size === s ? 'white' : '#3D2314', fontSize: optionSize }}>
                     {s === 'small' ? 'Peq' : s === 'medium' ? 'Med' : 'Grande'}
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
-          </View>
-          <View style={styles.half}>
-            <Text style={styles.label}>Género</Text>
-            <View style={styles.buttonGroup}>
+            </XStack>
+          </YStack>
+          <YStack flex={1} gap="$2">
+            <Text fontSize={labelSize} color="$bark" fontWeight="600">Género</Text>
+            <XStack gap="$2">
               {['male', 'female'].map(g => (
                 <TouchableOpacity
                   key={g}
-                  style={[styles.button, form.gender === g && styles.buttonActive]}
+                  style={btn(form.gender === g)}
                   onPress={() => setForm(p => ({ ...p, gender: g }))}
                 >
-                  <Text style={[styles.buttonText, form.gender === g && styles.buttonTextActive]}>
+                  <Text style={{ color: form.gender === g ? 'white' : '#3D2314', fontSize: optionSize }}>
                     {g === 'male' ? 'Macho' : 'Hembra'}
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
-          </View>
-        </View>
+            </XStack>
+          </YStack>
+        </XStack>
 
-        <View style={styles.section}>
+        <YStack gap="$2">
           {(['isVaccinated', 'isSterilized', 'isDewormed'] as const).map(key => (
             <TouchableOpacity
               key={key}
-              style={[styles.button, form[key] && styles.buttonGreen]}
+              style={{
+                backgroundColor: form[key] ? '#4CAF50' : '#FFF8F0',
+                paddingHorizontal: 12,
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 60,
+              }}
               onPress={() => setForm(p => ({ ...p, [key]: !p[key] }))}
             >
-              <Text style={[styles.buttonText, form[key] && styles.buttonTextActive]}>
-                {key === 'isVaccinated' ? '✅ Vacunado' : key === 'isSterilized' ? '✅ Esterilizado' : '✅ Desparasitado'}
-              </Text>
+              <XStack alignItems="center" gap="$1">
+                <Feather name="check-circle" size={checkSize} color={form[key] ? 'white' : '#3D2314'} />
+                <Text style={{ color: form[key] ? 'white' : '#3D2314', fontSize: checkTextSize }}>
+                  {key === 'isVaccinated' ? ' Vacunado' : key === 'isSterilized' ? ' Esterilizado' : ' Desparasitado'}
+                </Text>
+              </XStack>
             </TouchableOpacity>
           ))}
-        </View>
+        </YStack>
 
         {showStatus && (
-          <View style={styles.section}>
+          <YStack gap="$2">
             {['available', 'pending', 'adopted'].map(s => (
               <TouchableOpacity
                 key={s}
-                style={[styles.button, form.status === s && styles.buttonActive, styles.buttonFull]}
+                style={btn(form.status === s)}
                 onPress={() => setForm(p => ({ ...p, status: s }))}
               >
-                <Text style={[styles.buttonText, form.status === s && styles.buttonTextActive]}>
+                <Text style={{ color: form.status === s ? 'white' : '#3D2314', fontSize: optionSize }}>
                   {s === 'available' ? 'Disponible' : s === 'pending' ? 'Pendiente' : 'Adoptado'}
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </YStack>
         )}
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          style={{
+            backgroundColor: '#FF6B6B',
+            paddingVertical: submitPadding,
+            borderRadius: 30,
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row',
+            gap: 8,
+            opacity: loading ? 0.6 : 1,
+            elevation: 3,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+          }}
           onPress={handleSubmit}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <><Feather name="check" size={18} color="white" /><Text style={styles.submitButtonText}>{submitLabel}</Text></>
+            <><Feather name="check" size={submitIconSize} color="white" /><Text color="white" fontSize={submitFontSize} fontWeight="bold">{submitLabel}</Text></>
           )}
         </TouchableOpacity>
-      </View>
+      </YStack>
     </ScrollView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-  },
-  photoContainer: {
-    height: 200,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
-  },
-  photoPlaceholder: {
-    color: colors.textLight,
-    fontSize: 16,
-  },
-  input: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: colors.text,
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  section: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 12,
-    color: colors.textLight,
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  button: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 60,
-  },
-  buttonActive: {
-    backgroundColor: colors.primary,
-  },
-  buttonGreen: {
-    backgroundColor: colors.secondary,
-  },
-  buttonFull: {
-    flex: 1,
-  },
-  buttonText: {
-    fontSize: 14,
-    color: colors.text,
-  },
-  buttonTextActive: {
-    color: colors.white,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  half: {
-    flex: 1,
-    gap: 8,
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    ...shadows.button,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-})

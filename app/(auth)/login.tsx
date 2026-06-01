@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, Pressable, StyleSheet, Text, TextInput, View, ActivityIndicator } from 'react-native'
+import { Alert, ActivityIndicator, useWindowDimensions } from 'react-native'
 import { Link } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import LottieView from 'lottie-react-native'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
-import { colors, borderRadius, shadows } from '../../src/presentation/theme'
+import { YStack, XStack, Text, Button, Input, Separator } from 'tamagui'
 import Feather from '@expo/vector-icons/Feather'
+import { colors } from '../../src/presentation/theme'
 
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth()
+  const { width: screenWidth } = useWindowDimensions()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,6 +22,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) return Alert.alert('Error', 'Completa todos los campos')
+    if (!/\S+@\S+\.\S+/.test(email)) return Alert.alert('Error', 'Ingresa un email válido')
     setLoading(true)
     try {
       await login(email, password)
@@ -42,186 +45,109 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <YStack flex={1} padding="$6" justifyContent="center" backgroundColor="$cream" gap="$4">
       <StatusBar style="dark" />
-      <View style={styles.header}>
+      <YStack alignItems="center" gap="$2" marginBottom="$4">
         <LottieView
           ref={animRef}
           source={require('../../assets/lottie/paw-animation.json')}
           loop
           resizeMode="contain"
-            style={{ width: 80, height: 80 }}
+          style={{ width: screenWidth * 0.25, height: screenWidth * 0.25 }}
         />
-        <Text style={styles.title}>PetAdopt</Text>
-        <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
-      </View>
+        <Text fontSize={screenWidth > 400 ? 32 : 26} fontWeight="800" textAlign="center" color="$chocolate">
+          PetAdopt
+        </Text>
+        <Text fontSize={screenWidth > 400 ? 15 : 13} textAlign="center" color="$bark">
+          Inicia sesión para continuar
+        </Text>
+      </YStack>
 
-      <View style={styles.inputContainer}>
-        <Feather name="mail" size={18} color={colors.textLight} style={styles.inputIcon} />
-        <TextInput
+      <XStack alignItems="center" backgroundColor="$white" borderWidth={1} borderColor="$border" borderRadius="$md" paddingHorizontal="$3">
+        <Feather name="mail" size={18} color={colors.bark} style={{ marginRight: 10 }} />
+        <Input
+          flex={1}
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
-          style={styles.input}
-          placeholderTextColor={colors.textLight}
+          borderWidth={0}
+          backgroundColor="transparent"
+          placeholderTextColor="$bark"
+          fontSize="$6"
+          paddingVertical={14}
         />
-      </View>
-      <View style={styles.inputContainer}>
-        <Feather name="lock" size={18} color={colors.textLight} style={styles.inputIcon} />
-        <TextInput
+      </XStack>
+      <XStack alignItems="center" backgroundColor="$white" borderWidth={1} borderColor="$border" borderRadius="$md" paddingHorizontal="$3">
+        <Feather name="lock" size={18} color={colors.bark} style={{ marginRight: 10 }} />
+        <Input
+          flex={1}
           placeholder="Contraseña"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={styles.input}
-          placeholderTextColor={colors.textLight}
+          borderWidth={0}
+          backgroundColor="transparent"
+          placeholderTextColor="$bark"
+          fontSize="$6"
+          paddingVertical={14}
         />
-      </View>
+      </XStack>
 
-      <Pressable style={[styles.button, loading && styles.buttonDisabled]} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <><Feather name="log-in" size={18} color="white" /><Text style={styles.buttonText}>  Iniciar Sesión</Text></>}
-      </Pressable>
+      <Button
+        backgroundColor="$coral"
+        borderRadius="$md"
+        pressStyle={{ backgroundColor: '$coralDeep' }}
+        disabled={loading}
+        opacity={loading ? 0.7 : 1}
+        onPress={handleLogin}
+        icon={<Feather name="log-in" size={18} color="white" />}
+      >
+        {loading ? <ActivityIndicator color="white" /> : '  Iniciar Sesión'}
+      </Button>
 
-      <View style={styles.divider}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>o</Text>
-        <View style={styles.dividerLine} />
-      </View>
+      <XStack alignItems="center" gap="$3">
+        <Separator flex={1} borderColor="$border" />
+        <Text color="$bark" fontSize={14}>o</Text>
+        <Separator flex={1} borderColor="$border" />
+      </XStack>
 
-      <Pressable style={[styles.buttonOutline, loading && styles.buttonDisabled]} onPress={handleGoogleLogin} disabled={loading}>
-        <Feather name="globe" size={18} color={colors.primary} />
-        <Text style={styles.buttonOutlineText}>  Continuar con Google</Text>
-      </Pressable>
+      <Button
+        variant="outlined"
+        borderColor="$coral"
+        borderRadius="$md"
+        backgroundColor="$white"
+        pressStyle={{ backgroundColor: '$sand' }}
+        disabled={loading}
+        opacity={loading ? 0.7 : 1}
+        onPress={handleGoogleLogin}
+        icon={<Feather name="globe" size={18} color={colors.coral} />}
+      >
+        {'  Continuar con Google'}
+      </Button>
 
-      <View style={styles.links}>
+      <YStack gap="$3" marginTop="$2">
         <Link href="/(auth)/register" asChild>
-          <Pressable style={styles.linkButton}>
-            <Feather name="user-plus" size={16} color={colors.text} />
-            <Text style={styles.linkText}>  Crear cuenta</Text>
-          </Pressable>
+          <Button
+            variant="outlined"
+            borderColor="$border"
+            borderRadius="$md"
+            backgroundColor="$white"
+            pressStyle={{ backgroundColor: '$sand' }}
+            icon={<Feather name="user-plus" size={16} color={colors.chocolate} />}
+          >
+            <Text fontWeight="700" color="$chocolate">  Crear cuenta</Text>
+          </Button>
         </Link>
         <Link href="/(auth)/forgot-password" asChild>
-          <Pressable>
-            <Text style={styles.inlineLink}>¿Olvidaste tu contraseña?</Text>
-          </Pressable>
+          <Button backgroundColor="transparent" borderWidth={0} pressStyle={{ opacity: 0.7 }}>
+            <Text textAlign="center" color="$coral" fontWeight="600" fontSize={14}>
+              ¿Olvidaste tu contraseña?
+            </Text>
+          </Button>
         </Link>
-      </View>
-    </View>
+      </YStack>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-    gap: 14,
-  },
-  header: {
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    textAlign: 'center',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: 15,
-    textAlign: 'center',
-    color: colors.textLight,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: 14,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.text,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    ...shadows.button,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    color: colors.textLight,
-    fontSize: 14,
-  },
-  buttonOutline: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-  },
-  buttonOutlineText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  links: {
-    gap: 12,
-    marginTop: 8,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-  },
-  linkText: {
-    color: colors.text,
-    fontWeight: '700',
-  },
-  inlineLink: {
-    textAlign: 'center',
-    color: colors.primary,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-})

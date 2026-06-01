@@ -3,7 +3,9 @@ import { useFonts } from 'expo-font'
 import { SplashScreen, Stack } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import { useEffect } from 'react'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator } from 'react-native'
+import { TamaguiProvider, Text, YStack } from 'tamagui'
+import config from '../tamagui.config'
 import { NotificationsDataSource } from '../src/data/datasources/NotificationsDataSource'
 import { SupabaseAuthRepository } from '../src/data/repositories/SupabaseAuthRepository'
 import { supabase } from '../src/data/supabase/client'
@@ -38,7 +40,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const authTimeout = setTimeout(() => {
-      console.log('⚠️ Auth loading timeout, forcing load')
+      console.log('Auth loading timeout, forcing load')
       setLoading(false)
     }, AUTH_TIMEOUT)
 
@@ -107,44 +109,35 @@ export default function RootLayout() {
 
   if (!loaded) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4A90E2" />
-      </View>
+      <TamaguiProvider config={config} defaultTheme="light">
+        <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="#F5F7FA">
+          <ActivityIndicator size="large" color="#FF6B6B" />
+        </YStack>
+      </TamaguiProvider>
     )
   }
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4A90E2" />
-        <Text style={styles.loadingText}>Cargando...</Text>
-      </View>
+      <TamaguiProvider config={config} defaultTheme="light">
+        <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="#F5F7FA" gap="$3">
+          <ActivityIndicator size="large" color="#FF6B6B" />
+          <Text fontSize={14} color="$bark" fontWeight="500">Cargando...</Text>
+        </YStack>
+      </TamaguiProvider>
     )
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(shelter)" />
-      <Stack.Screen name="(adopter)" />
-      <Stack.Screen name="auth/callback" />
-      <Stack.Screen name="auth/confirmed" />
-      <Stack.Screen name="auth/password-updated" />
-    </Stack>
+    <TamaguiProvider config={config} defaultTheme="light">
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(shelter)" />
+        <Stack.Screen name="(adopter)" />
+        <Stack.Screen name="auth/callback" />
+        <Stack.Screen name="auth/confirmed" />
+        <Stack.Screen name="auth/password-updated" />
+      </Stack>
+    </TamaguiProvider>
   )
 }
-
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F5F7FA',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontWeight: '500',
-  },
-})

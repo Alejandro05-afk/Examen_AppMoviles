@@ -1,31 +1,20 @@
 import LottieView from 'lottie-react-native';
-import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../theme';
+import { useWindowDimensions } from 'react-native';
+import { YStack, Text } from 'tamagui';
 
 interface Props { message: string; onFinish?: () => void }
 
-export const LottieSuccess = ({ message, onFinish }: Props) => (
-  <View style={styles.container}>
-    <LottieView
-      source={require('../../../../assets/lottie/success.json')}
-      autoPlay loop={false}
-      onAnimationFinish={onFinish}
-      style={{ width: 180, height: 180 }}
-    />
-    <Text style={styles.message}>{message}</Text>
-  </View>
-)
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  message: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginTop: 12,
-  },
-})
+export const LottieSuccess = ({ message, onFinish }: Props) => {
+  const { width: screenWidth } = useWindowDimensions()
+  return (
+    <YStack flex={1} alignItems="center" justifyContent="center">
+      <LottieView
+        source={require('../../../../assets/lottie/success.json')}
+        autoPlay loop={false}
+        onAnimationFinish={onFinish}
+        style={{ width: screenWidth * 0.45, height: screenWidth * 0.45 }}
+      />
+      <Text fontSize={screenWidth > 400 ? 18 : 16} fontWeight="bold" color="$chocolate" marginTop="$3">{message}</Text>
+    </YStack>
+  )
+}

@@ -1,6 +1,7 @@
 import { Image } from 'expo-image'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { colors, borderRadius, shadows } from '../../theme'
+import { TouchableOpacity, useWindowDimensions } from 'react-native'
+import { XStack, YStack, Text } from 'tamagui'
+import { colors } from '../../theme'
 import Feather from '@expo/vector-icons/Feather'
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/200x200/e2e8f0/a1a1aa?text=Pet'
@@ -14,105 +15,62 @@ interface PetCardProps {
   onPress?: () => void
 }
 
-export const PetCard = ({ name, species, breed, mainPhotoUrl, status, onPress }: PetCardProps) => (
-  <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-    <View style={styles.cardContent}>
+export const PetCard = ({ name, species, breed, mainPhotoUrl, status, onPress }: PetCardProps) => {
+  const { width: screenWidth } = useWindowDimensions()
+  const avatarSize = screenWidth > 400 ? 72 : 56
+  return (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+    <XStack
+      backgroundColor="$white"
+      padding="$3"
+      borderRadius="$md"
+      borderWidth={1}
+      borderColor="$border"
+      alignItems="center"
+      gap="$3"
+    >
       <Image
         source={mainPhotoUrl || PLACEHOLDER_IMAGE}
         contentFit="cover"
         transition={150}
-        style={styles.image}
+        style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize * 0.17 }}
       />
-      <View style={styles.info}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.species}>{species}{breed ? ` - ${breed}` : ''}</Text>
-      </View>
+      <YStack flex={1} gap="$1">
+        <Text fontSize={16} fontWeight="bold" color="$chocolate">{name}</Text>
+        <Text fontSize={13} color="$bark" textTransform="capitalize">{species}{breed ? ` - ${breed}` : ''}</Text>
+      </YStack>
       {status && (
-        <View style={[
-          styles.statusBadge,
-          status === 'available' && styles.statusAvailable,
-          status === 'pending' && styles.statusPending,
-          status === 'adopted' && styles.statusAdopted
-        ]}>
+        <XStack
+          paddingHorizontal="$2"
+          paddingVertical="$1"
+          borderRadius="$sm"
+          alignItems="center"
+          gap="$1"
+          backgroundColor={
+            status === 'available' ? '#E6F7ED' :
+            status === 'pending' ? '#FFF3E0' :
+            '#FFE8E8'
+          }
+        >
           <Feather
             name={status === 'available' ? 'check-circle' : status === 'pending' ? 'clock' : 'x-circle'}
             size={12}
-            color={status === 'available' ? colors.secondary : status === 'pending' ? '#F5A623' : colors.alert}
+            color={status === 'available' ? colors.success : status === 'pending' ? colors.warning : colors.danger}
           />
-          <Text style={[
-            styles.statusText,
-            status === 'available' && styles.statusTextAvailable,
-            status === 'pending' && styles.statusTextPending,
-            status === 'adopted' && styles.statusTextAdopted
-          ]}>
+          <Text
+            fontSize={12}
+            fontWeight="bold"
+            color={
+              status === 'available' ? colors.success :
+              status === 'pending' ? colors.warning :
+              colors.danger
+            }
+          >
             {status === 'available' ? 'Disponible' : status === 'pending' ? 'Pendiente' : 'Adoptado'}
           </Text>
-        </View>
+        </XStack>
       )}
-    </View>
+    </XStack>
   </TouchableOpacity>
-)
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    padding: 12,
-    borderRadius: borderRadius.md,
-    ...shadows.card,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  image: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.md,
-  },
-  info: {
-    flex: 1,
-    gap: 4,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  species: {
-    fontSize: 13,
-    color: colors.textLight,
-    textTransform: 'capitalize',
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: borderRadius.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statusAvailable: {
-    backgroundColor: '#E6F7ED',
-  },
-  statusPending: {
-    backgroundColor: '#FFF3E0',
-  },
-  statusAdopted: {
-    backgroundColor: '#FFE8E8',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  statusTextAvailable: {
-    color: colors.secondary,
-  },
-  statusTextPending: {
-    color: '#F5A623',
-  },
-  statusTextAdopted: {
-    color: colors.alert,
-  },
-})
-
+  )
+}

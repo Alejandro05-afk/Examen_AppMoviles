@@ -1,16 +1,17 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import LottieView from 'lottie-react-native'
-import { useEffect, useRef, useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import { useWindowDimensions } from 'react-native'
+import { YStack, Text } from 'tamagui'
 import { useAuth } from '../../src/presentation/hooks/useAuth'
 import { useAuthStore } from '../../src/presentation/store/authStore'
-import { colors } from '../../src/presentation/theme'
 
 export default function AuthCallbackScreen() {
   const { completeOAuthSessionFromUrl } = useAuth()
   const { isAuthenticated, user } = useAuthStore()
   const [error, setError] = useState<string | null>(null)
   const params = useLocalSearchParams<{ access_token?: string; refresh_token?: string }>()
+  const { width: screenWidth } = useWindowDimensions()
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -51,48 +52,20 @@ export default function AuthCallbackScreen() {
   }, [isAuthenticated, user, params.access_token, params.refresh_token])
 
   return (
-    <View style={styles.container}>
+    <YStack flex={1} alignItems="center" justifyContent="center" gap="$4" padding="$6" backgroundColor="$cream">
       {error ? (
-        <>
-          <Text style={styles.error}>{error}</Text>
-          <Text style={styles.retry} onPress={() => router.replace('/(auth)/login')}>
+        <YStack gap="$3" alignItems="center" paddingHorizontal="$4">
+          <Text color="$coral" textAlign="center" fontSize={screenWidth > 400 ? 16 : 14} fontWeight="500">{error}</Text>
+          <Text color="$coral" fontSize={screenWidth > 400 ? 14 : 12} fontWeight="600" textDecorationLine="underline" onPress={() => router.replace('/(auth)/login')}>
             Volver al inicio de sesión
           </Text>
-        </>
+        </YStack>
       ) : (
-        <>
-          <LottieView source={require('../../assets/lottie/loading.json')} autoPlay loop style={{ width: 100, height: 100 }} />
-          <Text style={styles.loadingText}>Completando inicio de sesión...</Text>
-        </>
+        <YStack gap="$2" alignItems="center">
+          <LottieView source={require('../../assets/lottie/loading.json')} autoPlay loop style={{ width: screenWidth * 0.25, height: screenWidth * 0.25 }} />
+          <Text fontSize={screenWidth > 400 ? 16 : 14} color="$chocolate" fontWeight="500">Completando inicio de sesión...</Text>
+        </YStack>
       )}
-    </View>
+    </YStack>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    padding: 24,
-    backgroundColor: colors.background,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  error: {
-    color: colors.alert,
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  retry: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
-})
