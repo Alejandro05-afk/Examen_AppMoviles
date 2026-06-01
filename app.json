@@ -25,6 +25,11 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.tuapp.petadopt",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAQIyKsxErzXNCgmZS2WGeZUE_-ugmNFh0"
+        }
+      },
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
