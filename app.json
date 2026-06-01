@@ -11,12 +11,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tuapp.petadopt",
-    "infoPlist": {
+      "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "PetAdopt necesita tu ubicación para mostrarte refugios cercanos."
       }
     },
     "android": {
-      
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -26,12 +25,9 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.tuapp.petadopt",
-  
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -82,8 +78,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8d0525f9-a4ff-47c7-a78a-281b2b002902"
+        "projectId": "0d44bbf9-3cd1-4224-8290-de3d5a4e68ea"
       }
-    }
+    },
+    "owner": "alejoafk_05"
   }
 }

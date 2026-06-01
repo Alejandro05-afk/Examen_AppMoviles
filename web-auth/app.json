@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "0da30c75-3bbe-4314-a418-c53ae64bc396"
+      }
+    },
+    "android": {
+      "package": "com.alejandroafk_2005.petadoptwebauth"
+    }
+  }
+}
